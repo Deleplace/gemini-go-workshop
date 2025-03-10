@@ -48,5 +48,10 @@ func sample4_videoInput(ctx context.Context) error {
 	fmt.Println("Answers:", answers)
 	fmt.Println()
 
+	//
+	// Exercise:
+	// instead of a text question, provide the audio file ./testdata/question_about_video.m4a as the question.
+	//
+
 	return nil
 }
