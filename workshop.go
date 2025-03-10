@@ -62,6 +62,7 @@ func main() {
 
 var samples = []namedSample{
 	0: {name: "Text prompt, text answer", f: sample0_text},
+	1: {name: "Text prompt, streaming text output", f: sample1_text_stream},
 }
 
 func usage() {
