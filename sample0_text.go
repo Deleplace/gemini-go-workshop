@@ -34,5 +34,10 @@ func sample0_text(ctx context.Context) error {
 	// }
 	// fmt.Println(string(response))
 
+	//
+	// Exercise:
+	// ask the same question but in French.
+	//
+
 	return nil
 }
