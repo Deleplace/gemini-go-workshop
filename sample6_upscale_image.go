@@ -13,6 +13,8 @@ import (
 // $ export GOOGLE_GENAI_USE_VERTEXAI=true
 // $ export GOOGLE_CLOUD_PROJECT=xxxxxxxxx
 // $ export GOOGLE_CLOUD_LOCATION=us-central1
+// $ gcloud auth application-default login
+// $ gcloud services enable aiplatform.googleapis.com
 // $ go run . -n=6
 
 func sample6_upscaleImage(ctx context.Context) error {
