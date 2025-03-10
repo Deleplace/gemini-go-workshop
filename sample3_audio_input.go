@@ -10,6 +10,7 @@ import (
 
 // To run this sample with a Gemini API key:
 //
+// $ export GOOGLE_GENAI_USE_VERTEXAI=false
 // $ export GOOGLE_API_KEY=xxxxxxxxxx
 // $ go run . -n=3
 
@@ -17,7 +18,7 @@ func sample3_audioInput(ctx context.Context) error {
 	modelName := "gemini-2.0-flash-001"
 
 	// Load an audio file to create a multimodal prompt
-	path := "./testdata/math.m4a"
+	path := "./testdata/math.mp3"
 	audiodata, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -29,7 +30,7 @@ func sample3_audioInput(ctx context.Context) error {
 	prompt := []*genai.Content{
 		{
 			Parts: []*genai.Part{
-				genai.NewPartFromBytes(audiodata, "audio/mp4"),
+				genai.NewPartFromBytes(audiodata, "audio/mp3"),
 			},
 		},
 	}

@@ -62,7 +62,7 @@ func main() {
 
 var samples = []namedSample{
 	0: {name: "Text prompt, text answer", f: sample0_text},
-	1: {name: "Text prompt, streaming text output", f: sample1_text_stream},
+	1: {name: "Text prompt, streaming text output", f: sample1_textStream},
 	2: {name: "Multimodal prompt: text and image", f: sample2_imageInput},
 	3: {name: "Multimodal prompt: audio", f: sample3_audioInput},
 	4: {name: "Multimodal prompt: video", f: sample4_videoInput},
