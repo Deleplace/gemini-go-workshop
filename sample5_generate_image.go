@@ -8,7 +8,7 @@ import (
 	"google.golang.org/genai"
 )
 
-// To run this sample with a Gemini API key:
+// To run this sample with a VertexAI Google Cloud project:
 //
 // $ export GOOGLE_GENAI_USE_VERTEXAI=true
 // $ export GOOGLE_CLOUD_PROJECT=xxxxxxxxx
