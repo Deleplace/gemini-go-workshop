@@ -44,6 +44,7 @@ var upgrader = websocket.Upgrader{} // use default options
 var homeTemplate string
 
 func live(w http.ResponseWriter, r *http.Request) {
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal("upgrade error: ", err)
