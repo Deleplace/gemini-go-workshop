@@ -16,8 +16,12 @@ import (
 func sample2_imageInput(ctx context.Context) error {
 	modelName := "gemini-2.0-flash-001"
 
+	//
+	// Exercise:
+	//
 	// Is the last answer good enough?
 	// What happens if you use the model "gemini-2.0-flash-thinking-exp-01-21" instead?
+	//
 
 	// Load an image to create a multimodal prompt
 	imgdata, err := os.ReadFile("./testdata/pool.png")
