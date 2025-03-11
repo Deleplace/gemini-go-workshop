@@ -16,6 +16,11 @@ import (
 	"google.golang.org/genai"
 )
 
+// To run this sample with a Gemini API key:
+//
+// $ export GOOGLE_API_KEY=xxxxxxxxxx
+// $ go run . -n=7
+
 func sample7_liveStreamingServer(ctx context.Context) error {
 	log.SetFlags(0)
 	http.HandleFunc("/", homePage)
