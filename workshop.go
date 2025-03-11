@@ -68,6 +68,7 @@ var samples = []namedSample{
 	4: {name: "Multimodal prompt: video", f: sample4_videoInput},
 	5: {name: "Generate images", f: sample5_generateImage},
 	6: {name: "Upscale image", f: sample6_upscaleImage},
+	7: {name: "Live streaming server", f: sample7_liveStreamingServer},
 }
 
 func usage() {
