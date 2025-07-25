@@ -144,12 +144,12 @@
             }
 
             function createImageContent(msg) {
-                data = { 'realtimeInput': { 'mediaChunks': [{ 'data': msg, 'mimeType': 'image/jpeg' }] } };
+                data = { 'media': { 'data': msg,  'mimeType': 'image/jpeg'  } };
                 return JSON.stringify(data);
             }
 
             function createAudioContent(msg) {
-                data = { 'realtimeInput': { 'mediaChunks': [{ 'data': msg, 'mimeType': 'audio/pcm' }] } };
+                data = { 'media': { 'data': msg,  'mimeType': 'audio/pcm'  } };
                 return JSON.stringify(data);
             }
 
@@ -186,7 +186,6 @@
 
             window.addEventListener('load', function (evt) {
                 outputDiv = document.getElementById('output');
-                inputDiv = document.getElementById('input');
                 chatHistory = document.getElementById('chat-history');
                 video = document.getElementById('video')
                 function openWs() {
@@ -233,18 +232,6 @@
                     return false;
                 };
                 openWs();
-
-                inputDiv.addEventListener('input', () => {
-                    clearTimeout(inputTimer); // Clear any existing timer
-                    inputTimer = setTimeout(() => { //Restart the timer on every input
-                        if (isRecording) return;
-                        if (ws && ws.readyState === WebSocket.OPEN && input.value.trim() !== '') {
-                            ws.send(createContent(input.value));
-                            printChatText(input.value, 'Me');
-                            input.value = ''; // Clear the input field after sending
-                        }
-                    }, 500); // 1000ms = 1 second delay
-                });
 
                 document.getElementById('close').onclick = function (evt) {
                     if (!ws) {
@@ -435,14 +422,6 @@
                 <br />
                 <hr />
 
-                <h3>Text in; Audio out</h3>
-                To try this demo, please reload the page first to reset environment.
-                <p>Type in this input box to send text to the model. It streams to websocket every 0.5 second and
-                    user is not typing</p>
-                <input id='input' type='text'>
-                <br />
-                <hr />
-
                 <h3>Audio in; Audio out</h3>
                 <p>To try this demo, please reload the page first to reset environment.</p>
                 <button id='record'>Start Audio Conversation</button>
@@ -469,9 +448,6 @@
 
         </tr>
     </table>
-
-
-
 
 </body>
 

@@ -23,9 +23,8 @@ func sample5_generateImage(ctx context.Context) error {
 	fmt.Println("Prompt:", prompt)
 	fmt.Println()
 
-	var n int32 = 4
 	var config *genai.GenerateImagesConfig = &genai.GenerateImagesConfig{
-		NumberOfImages:   &n,
+		NumberOfImages:   4,
 		OutputMIMEType:   "image/jpeg",
 		IncludeRAIReason: true,
 	}
