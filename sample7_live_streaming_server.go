@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -40,8 +38,6 @@ func sample7_liveStreamingServer(ctx context.Context) error {
 	log.Printf("listening on port %s", port)
 	return http.ListenAndServe(":"+port, nil)
 }
-
-var addr = flag.String("addr", "localhost:8080", "http service address")
 
 var upgrader = websocket.Upgrader{} // use default options
 
@@ -81,7 +77,31 @@ func live(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Establish the live WebSocket connection with the specified GenAI model.
-	session, err := client.Live.Connect(ctx, model, &genai.LiveConnectConfig{})
+	config := &genai.LiveConnectConfig{} // empty config
+	config.SystemInstruction = &genai.Content{
+		Parts: []*genai.Part{
+			// {Text: "Always answer in German, only in German."},
+			// {Text: "Start the conversation by greeting Marc and Valentin."},
+		},
+	}
+	// voiceName := "Zephyr"
+	// voiceName := "Gacrux" // not available for model models/gemini-live-2.5-flash-preview
+	// voiceName := "Achird" // not available for model models/gemini-live-2.5-flash-preview
+	// voiceName := "Kore" // very very asian
+	// config.SpeechConfig = &genai.SpeechConfig{
+	// 	VoiceConfig: &genai.VoiceConfig{
+	// 		PrebuiltVoiceConfig: &genai.PrebuiltVoiceConfig{
+	// 			VoiceName: voiceName,
+	// 		},
+	// 	},
+	// }
+	config.ResponseModalities = []genai.Modality{genai.ModalityAudio}
+	//config.ResponseModalities = []genai.Modality{genai.ModalityAudio, genai.ModalityText}
+	// config.ResponseModalities = []genai.Modality{genai.ModalityText, genai.ModalityAudio}
+	// config.ResponseModalities = []genai.Modality{genai.ModalityText}
+	config.InputAudioTranscription = &genai.AudioTranscriptionConfig{}
+	config.OutputAudioTranscription = &genai.AudioTranscriptionConfig{}
+	session, err := client.Live.Connect(ctx, model, config)
 	if err != nil {
 		// Log fatal error if connecting to the model fails (e.g., network issues, invalid model name).
 		log.Fatal("connect to model error: ", err)
@@ -97,11 +117,28 @@ func live(w http.ResponseWriter, r *http.Request) {
 				// Log fatal error if receiving from the GenAI service fails (e.g., connection closed, network error).
 				log.Fatal("receive model response error: ", err)
 			}
+			if message.ServerContent != nil {
+				if message.ServerContent.InputTranscription != nil && message.ServerContent.InputTranscription.Text != "" {
+					log.Printf("Input Transcript: %s", message.ServerContent.InputTranscription.Text)
+				}
+				if message.ServerContent.OutputTranscription != nil && message.ServerContent.OutputTranscription.Text != "" {
+					log.Printf("Output Transcript: %s", message.ServerContent.OutputTranscription.Text)
+				}
+			}
 			// Marshal the received message into JSON format.
 			messageBytes, err := json.Marshal(message)
 			if err != nil {
 				// Log fatal error if marshaling the message to JSON fails.
 				log.Fatal("marhal model response error: ", message, err)
+			}
+			{
+				tmpfile, err := os.CreateTemp("", "livestream")
+				if err != nil {
+					log.Fatalln(err)
+				}
+				//fmt.Printf("Received JSON from model, writing to %s\n", tmpfile.Name())
+				tmpfile.Write(messageBytes)
+				tmpfile.Close()
 			}
 			// Send the JSON message to the client WebSocket.
 			err = c.WriteMessage(websocket.TextMessage, messageBytes) // Use TextMessage type for JSON
@@ -123,7 +160,7 @@ func live(w http.ResponseWriter, r *http.Request) {
 			break // Exit loop on error
 		}
 		if len(message) > 0 {
-			log.Printf(" bytes size received from client: %d", len(message))
+			// log.Printf(" bytes size received from client: %d", len(message))
 		}
 
 		var realtimeInput genai.LiveRealtimeInput
@@ -148,7 +185,7 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("ws://" + r.Host + "/live")
+	// fmt.Println("ws://" + r.Host + "/live")
 	// Execute the template, passing the WebSocket URL to it.
 	err = tmpl.Execute(w, "ws://"+r.Host+"/live")
 	if err != nil {
