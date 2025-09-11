@@ -23,6 +23,7 @@ func sample8_forbiddenWords(ctx context.Context) error {
 	log.SetFlags(0)
 	http.HandleFunc("/", serveSample8Webapp)
 	http.HandleFunc("/live", sample8Live)
+	http.Handle("/forbiddenwords/", http.StripPrefix("/forbiddenwords/", http.FileServer(http.Dir("testdata/forbiddenwords"))))
 
 	// Determine port for HTTP service.
 	port := os.Getenv("PORT")

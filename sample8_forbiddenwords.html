@@ -287,6 +287,7 @@
 
 </head>
 <body class="bg-slate-900 text-white flex items-center justify-center min-h-screen p-4">
+    <img id="referee-img" src="/forbiddenwords/referee.png" class="hidden absolute left-8 top-1/2 -translate-y-1/2 h-96">
     <div class="w-full max-w-2xl mx-auto text-center">
         
         <header class="mb-8">
@@ -348,6 +349,7 @@
         const forbiddenWordsList = document.getElementById('forbidden-words-list');
         const timerDisplay = document.getElementById('timer');
         const micStatus = document.getElementById('mic-status');
+        const refereeImg = document.getElementById('referee-img');
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
@@ -385,6 +387,7 @@
             mainWordContainer.innerHTML = '';
             forbiddenWordsList.innerHTML = '';
             gameScreen.classList.remove('hidden');
+            refereeImg.classList.remove('hidden');
 
             const gameData = { ...wordData[Math.floor(Math.random() * wordData.length)] };
             targetWord = { word: gameData.word };
