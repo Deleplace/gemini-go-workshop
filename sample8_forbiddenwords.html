@@ -228,6 +228,7 @@
             }
 
             function recordAudio() {
+                console.debug('recordAudio()');
                 navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
                     const audioContext = new AudioContext({ sampleRate: sampleRate }); // Explicitly set sample rate.
                     const source = audioContext.createMediaStreamSource(stream);
@@ -239,6 +240,7 @@
 
                         // Process or send pcmData16 via WebSocket
                         if (ws && ws.readyState === WebSocket.OPEN) {
+                            // console.debug('audioChunksSent.push()');
                             audioChunksSent.push(new Uint8Array(pcmData16.buffer))
                             const base64Data = arrayBufferToBase64(pcmData16.buffer);
                             ws.send(createAudioContent(base64Data));
@@ -281,6 +283,28 @@
                     }
                     audio.play();
                 }
+            }
+
+            function refereeSpeaking(duration) {
+                const refereeImg = document.getElementById('referee-img');
+                const originalSrc = '/forbiddenwords/referee.png';
+                const speakingSrc = '/forbiddenwords/referee_openmouth.png';
+
+                if (!refereeImg) return;
+
+                const interval = 150;
+                let isSpeaking = true;
+                refereeImg.src = speakingSrc;
+
+                const animationInterval = setInterval(() => {
+                    isSpeaking = !isSpeaking;
+                    refereeImg.src = isSpeaking ? speakingSrc : originalSrc;
+                }, interval);
+
+                setTimeout(() => {
+                    clearInterval(animationInterval);
+                    refereeImg.src = originalSrc;
+                }, duration);
             }
 
     </script>
@@ -372,7 +396,12 @@
         let timer;
         let timeLeft;
 
-        function speak(text, callback) {
+        function refereeSpeak(text, callback) {
+            // Estimate speech duration and animate referee
+            const words = text.split(' ');
+            const duration = words.length * 333; // Approx. 3 words per second
+            refereeSpeaking(duration);
+
             console.log(text);
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = 0.9;
@@ -403,8 +432,8 @@
             `;
 
             recordStart();
-            speak(`Describe the word: ${targetWord.word}`, () => {
-                speak("The forbidden words are", () => {
+            refereeSpeak(`Describe the word: ${targetWord.word}`, () => {
+                refereeSpeak("The forbidden words are", () => {
                     // After saying the main word, show the other forbidden words
                     gameData.forbidden.forEach((word, index) => {
                         setTimeout(() => {
@@ -412,7 +441,7 @@
                             wordEl.className = 'bg-slate-700 text-red-400 font-semibold py-2 px-4 rounded-lg animate-grow';
                             wordEl.textContent = word;
                             forbiddenWordsList.appendChild(wordEl);
-                            speak(word);
+                            refereeSpeak(word);
                         }, index * 800);
                     });
 
