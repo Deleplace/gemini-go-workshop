@@ -281,18 +281,19 @@
                         isAudioPlaying = false;
                         playNextChunk();
                     }
+                    contestantSpeaking();
                     audio.play();
                 }
             }
 
-            function refereeSpeaking(duration) {
+            function refereeSpeaking() {
                 const refereeImg = document.getElementById('referee-img');
                 const originalSrc = '/forbiddenwords/referee.png';
                 const speakingSrc = '/forbiddenwords/referee_openmouth.png';
 
-                if (!refereeImg) return;
+                if (!refereeImg) return null;
 
-                const interval = 150;
+                const interval = 120;
                 let isSpeaking = true;
                 refereeImg.src = speakingSrc;
 
@@ -301,10 +302,25 @@
                     refereeImg.src = isSpeaking ? speakingSrc : originalSrc;
                 }, interval);
 
+                return animationInterval;
+            }
+
+            function contestantSpeaking() {
+                const contestantImg = document.getElementById('contestant2-img');
+                const originalSrc = '/forbiddenwords/contestant2.png';
+                const speakingSrc = '/forbiddenwords/contestant2_openmouth.png';
+
+                if (!contestantImg) return null;
+
                 setTimeout(() => {
-                    clearInterval(animationInterval);
-                    refereeImg.src = originalSrc;
-                }, duration);
+                    // Open mouth
+                contestantImg.src = speakingSrc;
+                }, 100);
+
+                setTimeout(() => {
+                    // Close mouth
+                    contestantImg.src = originalSrc;
+                }, 300);
             }
 
     </script>
@@ -312,6 +328,7 @@
 </head>
 <body class="bg-slate-900 text-white flex items-center justify-center min-h-screen p-4">
     <img id="referee-img" src="/forbiddenwords/referee.png" class="hidden absolute left-8 top-1/2 -translate-y-1/2 h-96">
+    <img id="contestant2-img" src="/forbiddenwords/contestant2.png" class="hidden absolute right-8 top-1/2 -translate-y-1/2 h-96">
     <div class="w-full max-w-2xl mx-auto text-center">
         
         <header class="mb-8">
@@ -397,16 +414,26 @@
         let timeLeft;
 
         function refereeSpeak(text, callback) {
-            // Estimate speech duration and animate referee
-            const words = text.split(' ');
-            const duration = words.length * 333; // Approx. 3 words per second
-            refereeSpeaking(duration);
-
             console.log(text);
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = 0.9;
             utterance.pitch = 1.1;
-            utterance.onend = callback;
+            
+            const animationInterval = refereeSpeaking();
+
+            utterance.onend = () => {
+                if (animationInterval) {
+                    clearInterval(animationInterval);
+                    const refereeImg = document.getElementById('referee-img');
+                    if (refereeImg) {
+                        refereeImg.src = '/forbiddenwords/referee.png';
+                    }
+                }
+                if (callback) {
+                    callback();
+                }
+            };
+
             speechSynthesis.speak(utterance);
         }
 
@@ -441,7 +468,18 @@
                             wordEl.className = 'bg-slate-700 text-red-400 font-semibold py-2 px-4 rounded-lg animate-grow';
                             wordEl.textContent = word;
                             forbiddenWordsList.appendChild(wordEl);
-                            refereeSpeak(word);
+                            
+                            let callback = null;
+                            if (index === gameData.forbidden.length - 1) {
+                                // This is the last forbidden word.
+                                callback = () => {
+                                    const contestantImg = document.getElementById('contestant2-img');
+                                    if (contestantImg) {
+                                        contestantImg.classList.remove('hidden');
+                                    }
+                                };
+                            }
+                            refereeSpeak(word, callback);
                         }, index * 800);
                     });
 
