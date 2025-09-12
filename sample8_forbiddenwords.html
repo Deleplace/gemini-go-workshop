@@ -615,6 +615,7 @@
         }
 
         function endGame(isWin, message) {
+            console.log(message);
             clearInterval(timer);
             if (recognition) {
                 recognition.stop();
@@ -625,10 +626,16 @@
 
             gameMessage.textContent = isWin ? phrases[currentLanguage].youWin : phrases[currentLanguage].gameOver;
             messageSubtitle.textContent = message;
-            startButtonEn.textContent = '🇬🇧 ' + phrases[currentLanguage].playAgain;
-            startButtonFr.textContent = '🇫🇷 ' + phrases[currentLanguage].playAgain;
-            startButtonEs.textContent = '🇪🇸 ' + phrases[currentLanguage].playAgain;
-            startButtonDe.textContent = '🇩🇪 ' + phrases[currentLanguage].playAgain;
+            
+            const languageButtons = document.getElementById('language-buttons');
+            languageButtons.innerHTML = ''; // Clear language buttons
+
+            const playAgainButton = document.createElement('button');
+            playAgainButton.id = 'play-again-button';
+            playAgainButton.className = 'bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105';
+            playAgainButton.textContent = phrases[currentLanguage].playAgain;
+            playAgainButton.onclick = () => handleStartGameClick(currentLanguage);
+            languageButtons.appendChild(playAgainButton);
         }
 
         // --- Event Listeners ---
