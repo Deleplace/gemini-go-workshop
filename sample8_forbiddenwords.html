@@ -91,6 +91,8 @@
             var audioChunksSent = [];
             var processor; // Audio processor.
             var inputTimer; // Timer for input button.
+            var humanSpeech = '';
+            var modelSpeech = '';
 
             var sampleRate = 24000;
 
@@ -195,6 +197,27 @@
                 ws.onmessage = function (evt) {
                     data = JSON.parse(evt.data);
                     if (!data.serverContent) return;
+
+                    if (data.serverContent.inputTranscription && data.serverContent.inputTranscription.text) {
+                        humanSpeech += data.serverContent.inputTranscription.text;
+                        console.log('Human says: ', humanSpeech);
+
+                        for (const forbiddenWord of allForbiddenWords) {
+                            if (humanSpeech.toLowerCase().includes(forbiddenWord.toLowerCase())) {
+                                endGame(false, `You said a forbidden word: "${forbiddenWord}"`);
+                                return;
+                            }
+                        }
+                    }
+                    if (data.serverContent.outputTranscription && data.serverContent.outputTranscription.text) {
+                        modelSpeech += data.serverContent.outputTranscription.text;
+                        console.log('Model says: ', modelSpeech);
+                        if (modelSpeech.toLowerCase().includes(targetWord.word.toLowerCase())) {
+                            endGame(true, `The model guessed the word: "${targetWord.word}"`);
+                            return;
+                        }
+                    }
+
                     if (data.serverContent.turnComplete) {
                         if (audioChunksSent.length > 0) {
                             console.log(audioChunksSent.length);
@@ -206,7 +229,7 @@
                     if (!data.serverContent.modelTurn || !data.serverContent.modelTurn.parts || !data.serverContent.modelTurn.parts[0]) return;
                     if (data.serverContent.modelTurn.parts[0].inlineData) {
                         inlineData = data.serverContent.modelTurn.parts[0].inlineData;
-                        console.debug('RECEIVED: ' + typeof (inlineData) + inlineData.mimeType + inlineData.data)
+                        // console.debug('RECEIVED: ' + typeof (inlineData) + inlineData.mimeType + inlineData.data)
                         if (inlineData.mimeType.startsWith('audio/pcm')) {
                             const audioData = b64ToUint8Array(inlineData.data);
                             audioQueue.push(audioData);
@@ -516,6 +539,8 @@
 
         function startGame(language) {
             currentLanguage = language;
+            humanSpeech = '';
+            modelSpeech = '';
             startScreen.classList.add('hidden');
             mainWordContainer.innerHTML = '';
             forbiddenWordsList.innerHTML = '';
