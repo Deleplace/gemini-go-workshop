@@ -70,6 +70,13 @@
                 box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
             }
         }
+
+        #referee-img {
+            z-index: 5;  /* above the game box */
+        }
+        #contestant2-img {
+            z-index: -1;  /* below the game box */
+        }
     </style>
 
 
@@ -342,9 +349,20 @@
             <div id="start-screen">
                 <h2 id="game-message" class="text-3xl font-bold mb-4 text-white">Ready to Play?</h2>
                 <p id="message-subtitle" class="text-slate-300 mb-6">Click the button to start the game.</p>
-                <button id="start-button" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
-                    Start Game
-                </button>
+                <div id="language-buttons" class="flex flex-col space-y-4">
+                    <button id="start-button-en" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
+                        🇬🇧 English
+                    </button>
+                    <button id="start-button-fr" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
+                        🇫🇷 Français
+                    </button>
+                    <button id="start-button-es" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
+                        🇪🇸 Español
+                    </button>
+                    <button id="start-button-de" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
+                        🇩🇪 Deutsch
+                    </button>
+                </div>
             </div>
             
             <!-- Active Game State -->
@@ -381,9 +399,61 @@
     </div>
 
     <script>
+        let currentLanguage = 'en'; // Default language
+
+        const phrases = {
+            en: {
+                readyToPlay: "Ready to Play?",
+                clickToStart: "Click a button to start the game.",
+                describeWord: (word) => `Describe the word: ${word}`,
+                forbiddenWordsAre: "The forbidden words are",
+                youSurvived: "You survived! Well done!",
+                youWin: "You Win! 🎉",
+                gameOver: "Game Over! 😥",
+                playAgain: "Play Again",
+                micRequired: "Microphone access is required to play. Please allow it and try again."
+            },
+            fr: {
+                readyToPlay: "Prêt à jouer ?",
+                clickToStart: "Cliquez sur un bouton pour commencer le jeu.",
+                describeWord: (word) => `Décrivez le mot : ${word}`,
+                forbiddenWordsAre: "Les mots interdits sont",
+                youSurvived: "Vous avez survécu ! Bien joué ! ",
+                youWin: "Vous avez gagné ! 🎉",
+                gameOver: "Partie terminée ! 😥",
+                playAgain: "Rejouer",
+                micRequired: "L'accès au microphone est requis pour jouer. Veuillez l'autoriser et réessayer."
+            },
+            es: {
+                readyToPlay: "¿Listo para jugar?",
+                clickToStart: "Haz clic en un botón para iniciar el juego.",
+                describeWord: (word) => `Describe la palabra: ${word}`,
+                forbiddenWordsAre: "Las palabras prohibidas son",
+                youSurvived: "¡Sobreviviste! ¡Bien hecho!",
+                youWin: "¡Ganaste! 🎉",
+                gameOver: "¡Juego terminado! 😥",
+                playAgain: "Jugar de nuevo",
+                micRequired: "Se requiere acceso al micrófono para jugar. Por favor, permítelo e inténtalo de nuevo."
+            },
+            de: {
+                readyToPlay: "Bereit zu spielen?",
+                clickToStart: "Klicken Sie auf eine Schaltfläche, um das Spiel zu starten.",
+                describeWord: (word) => `Beschreiben Sie das Wort: ${word}`,
+                forbiddenWordsAre: "Die verbotenen Wörter sind",
+                youSurvived: "Du hast überlebt! Gut gemacht!",
+                youWin: "Du hast gewonnen! 🎉",
+                gameOver: "Spiel vorbei! 😥",
+                playAgain: "Nochmal spielen",
+                micRequired: "Mikrofonzugriff ist zum Spielen erforderlich. Bitte erlauben Sie ihn und versuchen Sie es erneut."
+            }
+        };
+
         const startScreen = document.getElementById('start-screen');
         const gameScreen = document.getElementById('game-screen');
-        const startButton = document.getElementById('start-button');
+        const startButtonEn = document.getElementById('start-button-en');
+        const startButtonFr = document.getElementById('start-button-fr');
+        const startButtonEs = document.getElementById('start-button-es');
+        const startButtonDe = document.getElementById('start-button-de');
         const gameMessage = document.getElementById('game-message');
         const messageSubtitle = document.getElementById('message-subtitle');
         const mainWordContainer = document.getElementById('main-word-container');
@@ -391,6 +461,10 @@
         const timerDisplay = document.getElementById('timer');
         const micStatus = document.getElementById('mic-status');
         const refereeImg = document.getElementById('referee-img');
+
+        // Set initial text based on default language
+        gameMessage.textContent = phrases[currentLanguage].readyToPlay;
+        messageSubtitle.textContent = phrases[currentLanguage].clickToStart;
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
@@ -438,7 +512,10 @@
         }
 
 
-        function startGame() {
+        
+
+        function startGame(language) {
+            currentLanguage = language;
             startScreen.classList.add('hidden');
             mainWordContainer.innerHTML = '';
             forbiddenWordsList.innerHTML = '';
@@ -459,8 +536,8 @@
             `;
 
             recordStart();
-            refereeSpeak(`Describe the word: ${targetWord.word}`, () => {
-                refereeSpeak("The forbidden words are", () => {
+            refereeSpeak(phrases[language].describeWord(targetWord.word), () => {
+                refereeSpeak(phrases[language].forbiddenWordsAre, () => {
                     // After saying the main word, show the other forbidden words
                     gameData.forbidden.forEach((word, index) => {
                         setTimeout(() => {
@@ -507,7 +584,7 @@
                 timeLeft--;
                 timerDisplay.textContent = timeLeft;
                 if (timeLeft <= 0) {
-                    endGame(true, "You survived! Well done!");
+                    endGame(true, phrases[currentLanguage].youSurvived);
                 }
             }, 1000);
         }
@@ -521,26 +598,33 @@
             gameScreen.classList.add('hidden');
             startScreen.classList.remove('hidden');
 
-            gameMessage.textContent = isWin ? 'You Win! 🎉' : 'Game Over! 😥';
+            gameMessage.textContent = isWin ? phrases[currentLanguage].youWin : phrases[currentLanguage].gameOver;
             messageSubtitle.textContent = message;
-            startButton.textContent = 'Play Again';
+            startButtonEn.textContent = '🇬🇧 ' + phrases[currentLanguage].playAgain;
+            startButtonFr.textContent = '🇫🇷 ' + phrases[currentLanguage].playAgain;
+            startButtonEs.textContent = '🇪🇸 ' + phrases[currentLanguage].playAgain;
+            startButtonDe.textContent = '🇩🇪 ' + phrases[currentLanguage].playAgain;
         }
 
         // --- Event Listeners ---
-        startButton.addEventListener('click', () => {
-            
+        function handleStartGameClick(language) {
             // Check for microphone permissions first
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(stream => {
                     // Permissions granted, we can close the stream immediately
                     stream.getTracks().forEach(track => track.stop());
-                    startGame();
+                    startGame(language);
                 })
                 .catch(err => {
                     console.error('Microphone access denied:', err);
                     endGame(false, "Microphone access is required to play. Please allow it and try again.");
                 });
-        });
+        }
+
+        startButtonEn.addEventListener('click', () => handleStartGameClick('en'));
+        startButtonFr.addEventListener('click', () => handleStartGameClick('fr'));
+        startButtonEs.addEventListener('click', () => handleStartGameClick('es'));
+        startButtonDe.addEventListener('click', () => handleStartGameClick('de'));
 
     </script>
 </body>

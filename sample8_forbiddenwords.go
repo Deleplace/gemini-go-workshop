@@ -109,6 +109,8 @@ func sample8Live(w http.ResponseWriter, r *http.Request) {
 
 	// Goroutine to receive messages from the GenAI service and send to the client
 	go func() {
+		var humanSpeechBuffer []byte
+		var modelGuessBuffer []byte
 		for {
 			// Receive the next message from the GenAI service session.
 			message, err := session.Receive()
@@ -117,11 +119,21 @@ func sample8Live(w http.ResponseWriter, r *http.Request) {
 				log.Fatal("receive model response error: ", err)
 			}
 			if message.ServerContent != nil {
-				if message.ServerContent.InputTranscription != nil && message.ServerContent.InputTranscription.Text != "" {
-					log.Printf("Human player says: %s", message.ServerContent.InputTranscription.Text)
+				if message.ServerContent.InputTranscription != nil {
+					inputText := message.ServerContent.InputTranscription.Text
+					if inputText != "" {
+						log.Printf("Human player says: %s", inputText)
+						humanSpeechBuffer = append(humanSpeechBuffer, inputText...)
+						log.Printf("Human player says buffer: %s", humanSpeechBuffer)
+					}
 				}
-				if message.ServerContent.OutputTranscription != nil && message.ServerContent.OutputTranscription.Text != "" {
-					log.Printf("Model player guesses: %s", message.ServerContent.OutputTranscription.Text)
+				if message.ServerContent.OutputTranscription != nil {
+					outputText := message.ServerContent.OutputTranscription.Text
+					if outputText != "" {
+						modelGuessBuffer = append(modelGuessBuffer, outputText...)
+						log.Printf("Model player guesses: %s", outputText)
+						log.Printf("Model player guesses buffer: %s", modelGuessBuffer)
+					}
 				}
 			}
 			// Marshal the received message into JSON format.
