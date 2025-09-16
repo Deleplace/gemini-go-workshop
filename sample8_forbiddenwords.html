@@ -204,7 +204,7 @@
 
                         for (const forbiddenWord of allForbiddenWords) {
                             if (humanSpeech.toLowerCase().includes(forbiddenWord.toLowerCase())) {
-                                endGame(false, `You said a forbidden word: "${forbiddenWord}"`);
+                                endGame(false, `You said the forbidden word: "${forbiddenWord}"`);
                                 return;
                             }
                         }
@@ -213,7 +213,11 @@
                         modelSpeech += data.serverContent.outputTranscription.text;
                         console.log('Model says: ', modelSpeech);
                         if (modelSpeech.toLowerCase().includes(targetWord.word.toLowerCase())) {
-                            endGame(true, `The model guessed the word: "${targetWord.word}"`);
+                            // Give 800ms for the contestant to actually pronounce the word, then
+                            // proclaim victory.
+                            setTimeout(() => {
+                                endGame(true, `The model guessed the word: "${targetWord.word}"`);
+                            }, 800);
                             return;
                         }
                     }
@@ -615,6 +619,9 @@
         }
 
         function endGame(isWin, message) {
+            if (ws) {
+                ws.close();
+            }
             console.log(message);
             clearInterval(timer);
             if (recognition) {
@@ -627,6 +634,26 @@
             gameMessage.textContent = isWin ? phrases[currentLanguage].youWin : phrases[currentLanguage].gameOver;
             messageSubtitle.textContent = message;
             
+            // Referee raises his hand
+            const refereeImg = document.getElementById('referee-img');
+            if (refereeImg) {
+                refereeImg.src = '/forbiddenwords/referee_waves_openmouth.png';
+            }
+
+            if (isWin) {
+                // Won
+                const utterance = new SpeechSynthesisUtterance("Good job!");
+                utterance.rate = 0.9;
+                utterance.pitch = 1.1;
+                speechSynthesis.speak(utterance);
+            } else {
+                // Lost
+                const utterance = new SpeechSynthesisUtterance(message);
+                utterance.rate = 0.9;
+                utterance.pitch = 1.1;
+                speechSynthesis.speak(utterance);
+            }
+
             const languageButtons = document.getElementById('language-buttons');
             languageButtons.innerHTML = ''; // Clear language buttons
 

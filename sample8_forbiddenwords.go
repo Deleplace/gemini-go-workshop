@@ -116,7 +116,7 @@ func sample8Live(w http.ResponseWriter, r *http.Request) {
 			message, err := session.Receive()
 			if err != nil {
 				// Log fatal error if receiving from the GenAI service fails (e.g., connection closed, network error).
-				log.Fatal("receive model response error: ", err)
+				log.Fatal("deconnected: ", err)
 			}
 			if message.ServerContent != nil {
 				if message.ServerContent.InputTranscription != nil {
