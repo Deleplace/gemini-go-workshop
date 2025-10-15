@@ -13,7 +13,7 @@ import (
 // $ go run . -n=1
 
 func sample1_textStream(ctx context.Context) error {
-	modelName := "gemini-2.0-flash-001"
+	modelName := "gemini-2.5-flash-lite"
 	prompt := "Tell me a story in 300 words."
 	fmt.Println("Prompt:", prompt)
 	fmt.Println()

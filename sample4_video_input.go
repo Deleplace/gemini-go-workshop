@@ -14,7 +14,7 @@ import (
 // $ go run . -n=4
 
 func sample4_videoInput(ctx context.Context) error {
-	modelName := "gemini-2.0-flash-001"
+	modelName := "gemini-2.5-flash-lite"
 
 	// Load a video file to create a multimodal prompt
 	videodata, err := os.ReadFile("./testdata/pixel8.mp4")

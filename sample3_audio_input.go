@@ -15,7 +15,7 @@ import (
 // $ go run . -n=3
 
 func sample3_audioInput(ctx context.Context) error {
-	modelName := "gemini-2.0-flash-001"
+	modelName := "gemini-2.5-flash-lite"
 
 	// Load an audio file to create a multimodal prompt
 	path := "./testdata/math.mp3"
