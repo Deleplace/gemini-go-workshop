@@ -69,6 +69,7 @@ var samples = []namedSample{
 	5: {name: "Generate images", f: sample5_generateImage},
 	6: {name: "Upscale image", f: sample6_upscaleImage},
 	7: {name: "Live streaming server", f: sample7_liveStreamingServer},
+	8: {name: "Forbidden Words game", f: sample8_forbiddenWords},
 }
 
 func usage() {
