@@ -76,12 +76,19 @@ func live(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// NOTE: Model IDs are subject to change. Always consult the official
+	// Google Cloud Vertex AI and Google AI Studio Gemini model documentation for the latest versions.
 	var model string
 	if client.ClientConfig().Backend == genai.BackendVertexAI {
-		model = "gemini-2.0-flash-live-preview-04-09"
+		// Use the latest Vertex AI Live API model with Native Audio Preview (as of Oct 2025)
+		model = "gemini-live-2.5-flash-preview-native-audio-09-2025"
 	} else {
-		model = "gemini-live-2.5-flash-preview"
+		// Use the latest Gemini API (Google AI Studio) model with Native Audio Preview (as of Oct 2025)
+		// This replaces the soon-to-be-discontinued 'gemini-live-2.5-flash-preview'.
+		model = "gemini-2.5-flash-native-audio-preview-09-2025"
 	}
+	// TODO: Consider updating to the Generally Available (GA) version of the
+	// Live API Native Audio models when they are released (expected Nov 2025).
 
 	// Establish the live WebSocket connection with the specified GenAI model.
 	config := &genai.LiveConnectConfig{} // empty config
