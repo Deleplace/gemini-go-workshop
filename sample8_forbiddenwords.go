@@ -111,6 +111,14 @@ func sample8Live(w http.ResponseWriter, r *http.Request) {
 			{Text: sample8Prompt},
 		},
 	}
+	voiceName := "Puck"
+	config.SpeechConfig = &genai.SpeechConfig{
+		VoiceConfig: &genai.VoiceConfig{
+			PrebuiltVoiceConfig: &genai.PrebuiltVoiceConfig{
+				VoiceName: voiceName,
+			},
+		},
+	}
 	config.ResponseModalities = []genai.Modality{genai.ModalityAudio}
 	config.InputAudioTranscription = &genai.AudioTranscriptionConfig{}
 	config.OutputAudioTranscription = &genai.AudioTranscriptionConfig{}
@@ -130,7 +138,9 @@ func sample8Live(w http.ResponseWriter, r *http.Request) {
 			message, err := session.Receive()
 			if err != nil {
 				// Log fatal error if receiving from the GenAI service fails (e.g., connection closed, network error).
-				log.Fatal("deconnected: ", err)
+				log.Println("deconnected: ", err)
+				// The conversation is now stopped, but avoid crashing
+				return
 			}
 			if message.ServerContent != nil {
 				if message.ServerContent.InputTranscription != nil {

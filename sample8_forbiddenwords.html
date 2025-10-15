@@ -273,7 +273,7 @@
                         const pcmData16 = convertFloat32ToInt16(inputData);
 
                         // Process or send pcmData16 via WebSocket
-                        if (ws && ws.readyState === WebSocket.OPEN) {
+                        if (ws && ws.readyState === WebSocket.OPEN && preludeFinished) {
                             // console.debug('audioChunksSent.push()');
                             audioChunksSent.push(new Uint8Array(pcmData16.buffer))
                             const base64Data = arrayBufferToBase64(pcmData16.buffer);
@@ -377,17 +377,8 @@
                 <h2 id="game-message" class="text-3xl font-bold mb-4 text-white">Ready to Play?</h2>
                 <p id="message-subtitle" class="text-slate-300 mb-6">Click the button to start the game.</p>
                 <div id="language-buttons" class="flex flex-col space-y-4">
-                    <button id="start-button-en" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
-                        🇬🇧 English
-                    </button>
-                    <button id="start-button-fr" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
-                        🇫🇷 Français
-                    </button>
-                    <button id="start-button-es" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
-                        🇪🇸 Español
-                    </button>
-                    <button id="start-button-de" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
-                        🇩🇪 Deutsch
+                    <button id="start-button" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
+                        Start Game
                     </button>
                 </div>
             </div>
@@ -477,10 +468,7 @@
 
         const startScreen = document.getElementById('start-screen');
         const gameScreen = document.getElementById('game-screen');
-        const startButtonEn = document.getElementById('start-button-en');
-        const startButtonFr = document.getElementById('start-button-fr');
-        const startButtonEs = document.getElementById('start-button-es');
-        const startButtonDe = document.getElementById('start-button-de');
+        const startButton = document.getElementById('start-button');
         const gameMessage = document.getElementById('game-message');
         const messageSubtitle = document.getElementById('message-subtitle');
         const mainWordContainer = document.getElementById('main-word-container');
@@ -513,12 +501,35 @@
         let allForbiddenWords = [];
         let timer;
         let timeLeft;
+        let preludeFinished = false;
+
+        let availableVoices = [];
+        let maleVoice;
+        function loadVoices() {
+            availableVoices = window.speechSynthesis.getVoices();
+
+            maleVoice = availableVoices.find(v => 
+                    v.name.toLowerCase().includes('male') 
+                || v.name.toLowerCase().includes('david')
+                || v.name.toLowerCase().includes('daniel')
+                || v.name.toLowerCase().includes('fred')
+            );
+        }
+        loadVoices();
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
 
         function refereeSpeak(text, callback) {
             console.log(text);
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = 0.9;
-            utterance.pitch = 1.1;
+
+            if(maleVoice) {
+                utterance.voice = maleVoice;
+            } else {
+                utterance.pitch = 0.3;
+            }
             
             const animationInterval = refereeSpeaking();
 
@@ -545,6 +556,7 @@
             currentLanguage = language;
             humanSpeech = '';
             modelSpeech = '';
+            preludeFinished = false;
             startScreen.classList.add('hidden');
             mainWordContainer.innerHTML = '';
             forbiddenWordsList.innerHTML = '';
@@ -583,6 +595,7 @@
                                     if (contestantImg) {
                                         contestantImg.classList.remove('hidden');
                                     }
+                                    preludeFinished = true;
                                 };
                             }
                             refereeSpeak(word, callback);
@@ -642,16 +655,10 @@
 
             if (isWin) {
                 // Won
-                const utterance = new SpeechSynthesisUtterance("Good job!");
-                utterance.rate = 0.9;
-                utterance.pitch = 1.1;
-                speechSynthesis.speak(utterance);
+                refereeSpeak("Good job!");
             } else {
                 // Lost
-                const utterance = new SpeechSynthesisUtterance(message);
-                utterance.rate = 0.9;
-                utterance.pitch = 1.1;
-                speechSynthesis.speak(utterance);
+                refereeSpeak(message);
             }
 
             const languageButtons = document.getElementById('language-buttons');
@@ -661,7 +668,8 @@
             playAgainButton.id = 'play-again-button';
             playAgainButton.className = 'bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105';
             playAgainButton.textContent = phrases[currentLanguage].playAgain;
-            playAgainButton.onclick = () => handleStartGameClick(currentLanguage);
+            //playAgainButton.onclick = () => handleStartGameClick(currentLanguage);
+            playAgainButton.onclick = () => location.reload(); // make sure WS gets connected anew
             languageButtons.appendChild(playAgainButton);
         }
 
@@ -680,10 +688,7 @@
                 });
         }
 
-        startButtonEn.addEventListener('click', () => handleStartGameClick('en'));
-        startButtonFr.addEventListener('click', () => handleStartGameClick('fr'));
-        startButtonEs.addEventListener('click', () => handleStartGameClick('es'));
-        startButtonDe.addEventListener('click', () => handleStartGameClick('de'));
+        startButton.addEventListener('click', () => handleStartGameClick('en'));
 
     </script>
 </body>
