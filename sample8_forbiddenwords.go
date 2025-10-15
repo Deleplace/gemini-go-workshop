@@ -44,6 +44,12 @@ const sample8Prompt = `
 	Don't say anything else than the word you're guessing.
 `
 
+const detectorPrompt = `
+	You are a detector. You are listening to a human player.
+	If you hear them say one of the words "one, three, five, seven, nine", you must output "FORBIDDEN: " followed by the said forbidden word.
+	Otherwise, don't say anything.
+`
+
 //go:embed sample8_forbiddenwords.html
 var sample8Webapp string
 
@@ -107,6 +113,21 @@ func sample8Live(w http.ResponseWriter, r *http.Request) {
 	}
 	defer session.Close() // Ensure session is closed when the handler exits
 
+	// Establish the second live session for the detector.
+	detectorConfig := &genai.LiveConnectConfig{} // empty config
+	detectorConfig.SystemInstruction = &genai.Content{
+		Parts: []*genai.Part{
+			{Text: detectorPrompt},
+		},
+	}
+	detectorConfig.InputAudioTranscription = &genai.AudioTranscriptionConfig{}
+	detectorConfig.OutputAudioTranscription = &genai.AudioTranscriptionConfig{}
+	detectorSession, err := client.Live.Connect(ctx, model, detectorConfig)
+	if err != nil {
+		log.Fatal("connect to detector model error: ", err)
+	}
+	defer detectorSession.Close()
+
 	// Goroutine to receive messages from the GenAI service and send to the client
 	go func() {
 		var humanSpeechBuffer []byte
@@ -116,7 +137,8 @@ func sample8Live(w http.ResponseWriter, r *http.Request) {
 			message, err := session.Receive()
 			if err != nil {
 				// Log fatal error if receiving from the GenAI service fails (e.g., connection closed, network error).
-				log.Fatal("deconnected: ", err)
+				log.Println("deconnected from guesser: ", err)
+				return
 			}
 			if message.ServerContent != nil {
 				if message.ServerContent.InputTranscription != nil {
@@ -161,6 +183,25 @@ func sample8Live(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	// Goroutine to receive messages from the detector and log them.
+	go func() {
+		for {
+			message, err := detectorSession.Receive()
+			if err != nil {
+				log.Println("deconnected from detector: ", err)
+				return
+			}
+			if message.ServerContent != nil {
+				if message.ServerContent.OutputTranscription != nil {
+					outputText := message.ServerContent.OutputTranscription.Text
+					if outputText != "" {
+						log.Printf("DETECTOR says: %s", outputText)
+					}
+				}
+			}
+		}
+	}()
+
 	// Main loop to read messages from the client and send to the GenAI service
 	for {
 		// Read the next message from the client WebSocket.
@@ -181,8 +222,7 @@ func sample8Live(w http.ResponseWriter, r *http.Request) {
 			log.Fatal("unmarshal message error ", string(message), err)
 		}
 		// Send the unmarshaled realtime input to the GenAI service session.
-		// Note: This currently doesn't handle potential errors from SendRealtimeInput.
-		// Consider adding error handling here if needed.
 		session.SendRealtimeInput(realtimeInput)
+		detectorSession.SendRealtimeInput(realtimeInput)
 	}
 }
