@@ -39,7 +39,14 @@ func sample7_liveStreamingServer(ctx context.Context) error {
 	return http.ListenAndServe(":"+port, nil)
 }
 
-var upgrader = websocket.Upgrader{} // use default options
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		// Allows connections from any origin
+		// This help with testing in Cloud Shell,
+		// however we should not do this in a production system.
+		return true
+	},
+}
 
 //go:embed sample7_live_streaming.html
 var homeTemplate string

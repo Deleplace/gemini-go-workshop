@@ -64,7 +64,14 @@ func serveSample8Webapp(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var sample8Upgrader = websocket.Upgrader{} // use default options
+var sample8Upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		// Allows connections from any origin
+		// This help with testing in Cloud Shell,
+		// however we should not do this in a production system.
+		return true
+	},
+}
 
 func sample8Live(w http.ResponseWriter, r *http.Request) {
 	// Attempt to upgrade the HTTP connection to a WebSocket connection.
