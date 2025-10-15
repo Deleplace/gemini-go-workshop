@@ -1,10 +1,10 @@
 module github.com/Deleplace/gemini-go-workshop
 
-go 1.23.2
+go 1.24
 
 require (
 	github.com/gorilla/websocket v1.5.3
-	google.golang.org/genai v1.22.0
+	google.golang.org/genai v1.31.0
 )
 
 require (
