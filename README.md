@@ -86,7 +86,7 @@ go run . -n=6
 
 ### Sample 7: Live streaming server
 ```
-go run . -n=6
+go run . -n=7
 ```
 
 Open your browser at [http://localhost:8080](http://localhost:8080).
@@ -96,3 +96,10 @@ Click "Start Audio Conversation" and starting talking.
 Click "Share screen" and ask questions about what Gemini sees on your screen.
 
 Explore the source code and think about a use case for integrating these live capabilities in your application.
+
+### Sample 8: Forbidden Words game
+```
+go run . -n=8
+```
+
+Open your browser at [http://localhost:8080](http://localhost:8080).
