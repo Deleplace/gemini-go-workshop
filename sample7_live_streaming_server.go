@@ -101,7 +101,7 @@ func live(w http.ResponseWriter, r *http.Request) {
 	// voiceName := "Zephyr"
 	// voiceName := "Gacrux" // not available for model models/gemini-live-2.5-flash-preview
 	// voiceName := "Achird" // not available for model models/gemini-live-2.5-flash-preview
-	// voiceName := "Kore" // very very asian
+	// voiceName := "Kore" // asian
 	// config.SpeechConfig = &genai.SpeechConfig{
 	// 	VoiceConfig: &genai.VoiceConfig{
 	// 		PrebuiltVoiceConfig: &genai.PrebuiltVoiceConfig{
