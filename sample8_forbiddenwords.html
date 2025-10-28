@@ -538,16 +538,38 @@
         let preludeFinished = false;
 
         let availableVoices = [];
-        let maleVoice;
+        let voices = {}; // Use an object to store voices per language
+
         function loadVoices() {
             availableVoices = window.speechSynthesis.getVoices();
 
-            maleVoice = availableVoices.find(v => 
-                    v.name.toLowerCase().includes('male') 
-                || v.name.toLowerCase().includes('david')
-                || v.name.toLowerCase().includes('daniel')
-                || v.name.toLowerCase().includes('fred')
+            voices.en = availableVoices.find(v =>
+                v.lang.startsWith('en') &&
+                (v.name.toLowerCase().includes('male') ||
+                 v.name.toLowerCase().includes('david') ||
+                 v.name.toLowerCase().includes('daniel') ||
+                 v.name.toLowerCase().includes('fred'))
             );
+            if (!voices.en) {
+                voices.en = availableVoices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male'));
+            }
+            if (!voices.en) {
+                voices.en = availableVoices.find(v => v.lang.startsWith('en'));
+            }
+
+
+            voices.fr = availableVoices.find(v =>
+                v.lang.startsWith('fr') &&
+                (v.name.toLowerCase().includes('male') ||
+                 v.name.toLowerCase().includes('thomas') ||
+                 v.name.toLowerCase().includes('amethyste'))
+            );
+            if (!voices.fr) {
+                voices.fr = availableVoices.find(v => v.lang.startsWith('fr') && v.name.toLowerCase().includes('male'));
+            }
+            if (!voices.fr) {
+                voices.fr = availableVoices.find(v => v.lang.startsWith('fr'));
+            }
         }
         loadVoices();
         if (window.speechSynthesis.onvoiceschanged !== undefined) {
@@ -557,13 +579,12 @@
         function refereeSpeak(text, callback) {
             console.log(text);
             const utterance = new SpeechSynthesisUtterance(text);
-            if (currentLanguage === 'fr') {
-                utterance.lang = 'fr-FR';
-            }
+            utterance.lang = currentLanguage === 'fr' ? 'fr-FR' : 'en-US';
             utterance.rate = 1.2;
 
-            if(maleVoice) {
-                utterance.voice = maleVoice;
+            const voice = voices[currentLanguage];
+            if (voice) {
+                utterance.voice = voice;
             } else {
                 utterance.pitch = 0.3;
             }
