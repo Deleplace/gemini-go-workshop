@@ -27,7 +27,7 @@ const sample8Prompt = `
 	Don't say anything else than the word you're guessing.
 `
 
-const sample9Prompt_fr = `
+const sample8Prompt_fr = `
 	Vous jouez au jeu du "mot à deviner" où le joueur humain avec son microphone
 	décrit un mot. Votre travail consiste à écouter la description et à ne dire qu'un seul mot comme
 	votre suggestion, toutes les quelques secondes. Vous n'avez que 3 essais.
@@ -36,9 +36,7 @@ const sample9Prompt_fr = `
 
 func sample8_forbidden_words(ctx context.Context) error {
 	log.SetFlags(0)
-	http.HandleFunc("/", serveIndex)
-	http.HandleFunc("/en", serveGame("en"))
-	http.HandleFunc("/fr", serveGame("fr"))
+	http.HandleFunc("/", serveGame)
 	http.HandleFunc("/live/", liveGame)
 	http.Handle("/forbiddenwords/", http.StripPrefix("/forbiddenwords/", http.FileServer(http.Dir("testdata/forbiddenwords"))))
 
@@ -54,17 +52,11 @@ func sample8_forbidden_words(ctx context.Context) error {
 	return http.ListenAndServe(":"+port, nil)
 }
 
-//go:embed sample8_lang_choice.html
-var indexWebapp string
-
 //go:embed sample8_forbiddenwords.html
-var gameEnWebapp string
+var gameWebapp string
 
-//go:embed sample9_forbiddenwords_fr.html
-var gameFrWebapp string
-
-func serveIndex(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.New("index").Parse(indexWebapp)
+func serveGame(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.New("game").Parse(gameWebapp)
 	if err != nil {
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
 		return
@@ -75,33 +67,6 @@ func serveIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
-func serveGame(lang string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var webapp string
-		switch lang {
-		case "en":
-			webapp = gameEnWebapp
-		case "fr":
-			webapp = gameFrWebapp
-		default:
-			http.NotFound(w, r)
-			return
-		}
-
-		tmpl, err := template.New("game").Parse(webapp)
-		if err != nil {
-			http.Error(w, "Error loading template", http.StatusInternalServerError)
-			return
-		}
-		err = tmpl.Execute(w, "ws://"+r.Host+"/live/"+lang)
-		if err != nil {
-			http.Error(w, "Error executing template", http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
 var sample8Upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
@@ -115,7 +80,7 @@ func liveGame(w http.ResponseWriter, r *http.Request) {
 	case "en":
 		prompt = sample8Prompt
 	case "fr":
-		prompt = sample9Prompt_fr
+		prompt = sample8Prompt_fr
 	default:
 		log.Printf("unsupported language: %q", lang)
 		http.NotFound(w, r)
