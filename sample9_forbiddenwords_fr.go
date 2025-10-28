@@ -19,10 +19,10 @@ import (
 // $ export GOOGLE_API_KEY=xxxxxxxxxx
 // $ go run . -n=8fr
 
-func sample8_forbiddenWords_fr(ctx context.Context) error {
+func sample9_forbiddenWords_fr(ctx context.Context) error {
 	log.SetFlags(0)
-	http.HandleFunc("/fr", serveSample8Webapp_fr)
-	http.HandleFunc("/live-fr", sample8Live_fr)
+	http.HandleFunc("/fr", servesample9Webapp_fr)
+	http.HandleFunc("/live-fr", sample9Live_fr)
 	http.Handle("/forbiddenwords/", http.StripPrefix("/forbiddenwords/", http.FileServer(http.Dir("testdata/forbiddenwords"))))
 
 	// Determine port for HTTP service.
@@ -38,7 +38,7 @@ func sample8_forbiddenWords_fr(ctx context.Context) error {
 	return http.ListenAndServe(":"+port, nil)
 }
 
-const sample8Prompt_fr = `
+const sample9Prompt_fr = `
 	Vous jouez au jeu du "mot à deviner" où le joueur humain avec son microphone
 	décrit un mot. Votre travail consiste à écouter la description et à ne dire qu'un seul mot comme
 	votre suggestion, toutes les quelques secondes. Vous n'avez que 3 essais.
@@ -46,11 +46,11 @@ const sample8Prompt_fr = `
 `
 
 //go:embed sample9_forbiddenwords_fr.html
-var sample8Webapp_fr string
+var sample9Webapp_fr string
 
-func serveSample8Webapp_fr(w http.ResponseWriter, r *http.Request) {
+func servesample9Webapp_fr(w http.ResponseWriter, r *http.Request) {
 	// Parse the embedded HTML template.
-	tmpl, err := template.New("home").Parse(sample8Webapp_fr)
+	tmpl, err := template.New("home").Parse(sample9Webapp_fr)
 	if err != nil {
 		// Return an internal server error if the template parsing fails.
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
@@ -65,7 +65,7 @@ func serveSample8Webapp_fr(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var sample8Upgrader_fr = websocket.Upgrader{
+var sample9Upgrader_fr = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		// Allows connections from any origin
 		// This help with testing in Cloud Shell,
@@ -74,9 +74,9 @@ var sample8Upgrader_fr = websocket.Upgrader{
 	},
 }
 
-func sample8Live_fr(w http.ResponseWriter, r *http.Request) {
+func sample9Live_fr(w http.ResponseWriter, r *http.Request) {
 	// Attempt to upgrade the HTTP connection to a WebSocket connection.
-	c, err := sample8Upgrader_fr.Upgrade(w, r, nil)
+	c, err := sample9Upgrader_fr.Upgrade(w, r, nil)
 	if err != nil {
 		// Log fatal error if the WebSocket upgrade fails (e.g., invalid request headers).
 		log.Fatal("upgrade error: ", err)
@@ -109,7 +109,7 @@ func sample8Live_fr(w http.ResponseWriter, r *http.Request) {
 	config := &genai.LiveConnectConfig{} // empty config
 	config.SystemInstruction = &genai.Content{
 		Parts: []*genai.Part{
-			{Text: sample8Prompt_fr},
+			{Text: sample9Prompt_fr},
 		},
 	}
 	voiceName := "Puck"
