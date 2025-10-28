@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forbidden Word Game</title>
+    <title>Forbidden Word Game / Mots Interdits</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -182,11 +182,11 @@
                 return res;
             }
 
-            function openWs() {
+            function openWs(lang) {
                 if (ws) {
                     return false;
                 }
-                ws = new WebSocket('{{.}}');
+                ws = new WebSocket('ws://' + window.location.host + '/live/' + lang);
                 ws.onopen = function (evt) {
                     console.debug('OPEN');
                 }
@@ -204,7 +204,7 @@
 
                         for (const forbiddenWord of allForbiddenWords) {
                             if (humanSpeech.toLowerCase().includes(forbiddenWord.toLowerCase())) {
-                                endGame(false, `You said the forbidden word: "${forbiddenWord}"`);
+                                endGame(false, phrases[currentLanguage].youSaidForbidden(forbiddenWord));
                                 return;
                             }
                         }
@@ -216,7 +216,7 @@
                             // Give 800ms for the contestant to actually pronounce the word, then
                             // proclaim victory.
                             setTimeout(() => {
-                                endGame(true, `The model guessed the word: "${targetWord.word}"`);
+                                endGame(true, phrases[currentLanguage].modelGuessedWord(targetWord.word));
                             }, 800);
                             return;
                         }
@@ -366,19 +366,22 @@
     <div class="w-full max-w-2xl mx-auto text-center">
         
         <header class="mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold text-cyan-400">Forbidden Word</h1>
-            <p class="text-slate-400 mt-2">Describe the main word without saying any of the forbidden words!</p>
+            <h1 id="main-title" class="text-4xl md:text-5xl font-bold text-cyan-400"></h1>
+            <p id="main-subtitle" class="text-slate-400 mt-2"></p>
         </header>
 
         <main id="game-container" class="bg-slate-800 rounded-2xl shadow-2xl p-6 md:p-8 relative">
             
             <!-- Initial State / Game Over State -->
             <div id="start-screen">
-                <h2 id="game-message" class="text-3xl font-bold mb-4 text-white">Ready to Play?</h2>
-                <p id="message-subtitle" class="text-slate-300 mb-6">Click the button to start the game.</p>
-                <div id="language-buttons" class="flex flex-col space-y-4">
-                    <button id="start-button" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
-                        Start Game
+                <h2 id="game-message" class="text-3xl font-bold mb-4 text-white"></h2>
+                <p id="message-subtitle" class="text-slate-300 mb-6"></p>
+                <div id="language-buttons" class="flex justify-center space-x-4">
+                    <button id="start-en-button" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
+                        English
+                    </button>
+                    <button id="start-fr-button" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
+                        Français
                     </button>
                 </div>
             </div>
@@ -421,6 +424,9 @@
 
         const phrases = {
             en: {
+                gameTitle: "Forbidden Word Game",
+                title: "Forbidden Word",
+                subtitle: "Describe the main word without saying any of the forbidden words!",
                 readyToPlay: "Ready to Play?",
                 clickToStart: "Click a button to start the game.",
                 describeWord: (word) => `Describe the word: ${word}`,
@@ -429,9 +435,14 @@
                 youWin: "You Win! 🎉",
                 gameOver: "Game Over! 😥",
                 playAgain: "Play Again",
-                micRequired: "Microphone access is required to play. Please allow it and try again."
+                micRequired: "Microphone access is required to play. Please allow it and try again.",
+                youSaidForbidden: (word) => `You said the forbidden word: "${word}"`,
+                modelGuessedWord: (word) => `The model guessed the word: "${word}"`
             },
             fr: {
+                gameTitle: "Mots Interdits",
+                title: "Mots Interdits",
+                subtitle: "Décrivez le mot secret sans prononcer aucun des mots interdits !",
                 readyToPlay: "Prêt à jouer ?",
                 clickToStart: "Cliquez sur un bouton pour commencer le jeu.",
                 describeWord: (word) => `Décrivez le mot : ${word}`,
@@ -440,7 +451,9 @@
                 youWin: "Vous avez gagné ! 🎉",
                 gameOver: "Partie terminée ! 😥",
                 playAgain: "Rejouer",
-                micRequired: "L'accès au microphone est requis pour jouer. Veuillez l'autoriser et réessayer."
+                micRequired: "L'accès au microphone est requis pour jouer. Veuillez l'autoriser et réessayer.",
+                youSaidForbidden: (word) => `Vous avez dit le mot interdit: "${word}"`,
+                modelGuessedWord: (word) => `Le modèle a deviné le mot: "${word}"`
             },
             es: {
                 readyToPlay: "¿Listo para jugar?",
@@ -468,7 +481,6 @@
 
         const startScreen = document.getElementById('start-screen');
         const gameScreen = document.getElementById('game-screen');
-        const startButton = document.getElementById('start-button');
         const gameMessage = document.getElementById('game-message');
         const messageSubtitle = document.getElementById('message-subtitle');
         const mainWordContainer = document.getElementById('main-word-container');
@@ -477,25 +489,47 @@
         const micStatus = document.getElementById('mic-status');
         const refereeImg = document.getElementById('referee-img');
 
+        function updateUIText(language) {
+            document.documentElement.lang = language;
+            document.title = phrases[language].gameTitle;
+            document.getElementById('main-title').textContent = phrases[language].title;
+            document.getElementById('main-subtitle').textContent = phrases[language].subtitle;
+            gameMessage.textContent = phrases[language].readyToPlay;
+            messageSubtitle.textContent = phrases[language].clickToStart;
+        }
+
         // Set initial text based on default language
-        gameMessage.textContent = phrases[currentLanguage].readyToPlay;
-        messageSubtitle.textContent = phrases[currentLanguage].clickToStart;
+        updateUIText(currentLanguage);
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
 
-        const wordData = [
-            { word: 'Pizza', forbidden: ['Cheese', 'Dough', 'Pepperoni', 'Italian'] },
-            { word: 'Elephant', forbidden: ['Trunk', 'Large', 'Tusk', 'Animal'] },
-            { word: 'Guitar', forbidden: ['Strings', 'Music', 'Instrument', 'Play'] },
-            { word: 'Beach', forbidden: ['Sand', 'Ocean', 'Sun', 'Water'] },
-            { word: 'Computer', forbidden: ['Mouse', 'Keyboard', 'Screen', 'Code'] },
-            { word: 'Moon', forbidden: ['Night', 'Sky', 'Space', 'Planet'] },
-            { word: 'Coffee', forbidden: ['Bean', 'Morning', 'Drink', 'Cup'] },
-            { word: 'Book', forbidden: ['Read', 'Pages', 'Words', 'Library'] },
-            { word: 'Car', forbidden: ['Wheel', 'Drive', 'Road', 'Engine'] },
-            { word: 'Tree', forbidden: ['Leaf', 'Wood', 'Green', 'Forest'] }
-        ];
+        const wordData = {
+            en: [
+                { word: 'Pizza', forbidden: ['Cheese', 'Dough', 'Pepperoni', 'Italian'] },
+                { word: 'Elephant', forbidden: ['Trunk', 'Large', 'Tusk', 'Animal'] },
+                { word: 'Guitar', forbidden: ['Strings', 'Music', 'Instrument', 'Play'] },
+                { word: 'Beach', forbidden: ['Sand', 'Ocean', 'Sun', 'Water'] },
+                { word: 'Computer', forbidden: ['Mouse', 'Keyboard', 'Screen', 'Code'] },
+                { word: 'Moon', forbidden: ['Night', 'Sky', 'Space', 'Planet'] },
+                { word: 'Coffee', forbidden: ['Bean', 'Morning', 'Drink', 'Cup'] },
+                { word: 'Book', forbidden: ['Read', 'Pages', 'Words', 'Library'] },
+                { word: 'Car', forbidden: ['Wheel', 'Drive', 'Road', 'Engine'] },
+                { word: 'Tree', forbidden: ['Leaf', 'Wood', 'Green', 'Forest'] }
+            ],
+            fr: [
+                { word: 'Pizza', forbidden: ['Fromage', 'Pâte', 'Pepperoni', 'Italien'] },
+                { word: 'Éléphant', forbidden: ['Trompe', 'Grand', 'Défense', 'Animal'] },
+                { word: 'Guitare', forbidden: ['Cordes', 'Musique', 'Instrument', 'Jouer'] },
+                { word: 'Plage', forbidden: ['Sable', 'Océan', 'Soleil', 'Eau'] },
+                { word: 'Ordinateur', forbidden: ['Souris', 'Clavier', 'Écran', 'Code'] },
+                { word: 'Lune', forbidden: ['Nuit', 'Ciel', 'Espace', 'Planète'] },
+                { word: 'Café', forbidden: ['Grain', 'Matin', 'Boisson', 'Tasse'] },
+                { word: 'Livre', forbidden: ['Lire', 'Pages', 'Mots', 'Bibliothèque'] },
+                { word: 'Voiture', forbidden: ['Roue', 'Conduire', 'Route', 'Moteur'] },
+                { word: 'Arbre', forbidden: ['Feuille', 'Bois', 'Vert', 'Forêt'] }
+            ]
+        };
 
         let targetWord = {};
         let allForbiddenWords = [];
@@ -523,6 +557,9 @@
         function refereeSpeak(text, callback) {
             console.log(text);
             const utterance = new SpeechSynthesisUtterance(text);
+            if (currentLanguage === 'fr') {
+                utterance.lang = 'fr-FR';
+            }
             utterance.rate = 1.2;
 
             if(maleVoice) {
@@ -553,6 +590,7 @@
         
 
         function startGame(language) {
+            updateUIText(language);
             currentLanguage = language;
             humanSpeech = '';
             modelSpeech = '';
@@ -563,7 +601,7 @@
             gameScreen.classList.remove('hidden');
             refereeImg.classList.remove('hidden');
 
-            const gameData = { ...wordData[Math.floor(Math.random() * wordData.length)] };
+            const gameData = { ...wordData[language][Math.floor(Math.random() * wordData[language].length)] };
             targetWord = { word: gameData.word };
             allForbiddenWords = [gameData.word, ...gameData.forbidden];
 
@@ -602,7 +640,7 @@
                         }, index * 800);
                     });
 
-                    openWs();
+                    openWs(language);
                     setTimeout(() => {
                         // Start Gemini listening to the human player
                         // recordStart();
@@ -688,7 +726,8 @@
                 });
         }
 
-        startButton.addEventListener('click', () => handleStartGameClick('en'));
+        document.getElementById('start-en-button').addEventListener('click', () => handleStartGameClick('en'));
+        document.getElementById('start-fr-button').addEventListener('click', () => handleStartGameClick('fr'));
 
     </script>
 </body>
