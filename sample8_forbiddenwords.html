@@ -523,7 +523,7 @@
         function refereeSpeak(text, callback) {
             console.log(text);
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.9;
+            utterance.rate = 1.2;
 
             if(maleVoice) {
                 utterance.voice = maleVoice;
