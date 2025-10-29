@@ -205,7 +205,7 @@
                         if (!data.serverContent) return;
                         if (data.serverContent.turnComplete) {
                             if (audioChunksSent.length > 0) {
-                                console.log(audioChunksSent.length);
+                                //console.log(audioChunksSent.length);
                                 printChatAudio(encodeAudio(audioChunksSent, sampleRate, 16, 1), 'Me');
                                 audioChunksSent = [];
                             }

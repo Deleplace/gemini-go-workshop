@@ -186,7 +186,8 @@
                 if (ws) {
                     return false;
                 }
-                ws = new WebSocket('ws://' + window.location.host + '/live/' + lang);
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                ws = new WebSocket(protocol + '//' + window.location.host + '/live/' + lang);
                 ws.onopen = function (evt) {
                     console.debug('OPEN');
                 }
@@ -224,7 +225,7 @@
 
                     if (data.serverContent.turnComplete) {
                         if (audioChunksSent.length > 0) {
-                            console.log(audioChunksSent.length);
+                            //console.log(audioChunksSent.length);
                             audioChunksSent = [];
                         }
                         audioChunksReceived = []
