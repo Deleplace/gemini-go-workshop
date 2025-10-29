@@ -97,7 +97,8 @@ func liveGame(w http.ResponseWriter, r *http.Request) {
 	defer c.Close()
 
 	gameID := randomString(4)
-	log.Printf("Starting game %s in %s", gameID, lang)
+	forbiddenWords := r.URL.Query()["forbidden"]
+	log.Printf("Starting game %s in %s with forbidden words %q", gameID, lang, forbiddenWords)
 
 	ctx := context.Background()
 	client, err := genai.NewClient(ctx, nil)
@@ -145,13 +146,14 @@ func liveGame(w http.ResponseWriter, r *http.Request) {
 				You're a judge listening to a human player of Forbidden Words, who is not allowed to
 				say any of the words from the forbidden list. If the human player says any of them,
 				or a very close word with the same radical, or one of the words translated in aother
-				language, then pronounce only the guilty phrase for the human.
-			`},
+				language, then pronounce only the phrase from the human that violated the rule.
+
+				The forbiddens words are: ` + strings.Join(forbiddenWords, ", ")},
 		},
 	}
-	config.ResponseModalities = []genai.Modality{genai.ModalityAudio}
-	config.OutputAudioTranscription = &genai.AudioTranscriptionConfig{}
-	sessionJudge, err := client.Live.Connect(ctx, model, config)
+	configJudge.ResponseModalities = []genai.Modality{genai.ModalityAudio}
+	configJudge.OutputAudioTranscription = &genai.AudioTranscriptionConfig{}
+	sessionJudge, err := client.Live.Connect(ctx, model, configJudge)
 	if err != nil {
 		log.Fatal("connect to model error: ", err)
 	}
@@ -208,12 +210,14 @@ func liveGame(w http.ResponseWriter, r *http.Request) {
 				log.Println("judge deconnected: ", err)
 				return
 			}
-			messageBytes, err := json.Marshal(message)
-			if err != nil {
-				log.Fatal("marshal model response error: ", message, err)
+			sc := message.ServerContent
+			if sc != nil {
+				ot := sc.OutputTranscription
+				if ot != nil {
+					log.Printf("Game %s Judge says %q", gameID, ot.Text)
+					// TODO err = c.WriteMessage(websocket.TextMessage, messageBytes)
+				}
 			}
-			log.Printf("Game %s Judge says %q", gameID, string(messageBytes))
-			// TODO err = c.WriteMessage(websocket.TextMessage, messageBytes)
 		}
 	}()
 }
