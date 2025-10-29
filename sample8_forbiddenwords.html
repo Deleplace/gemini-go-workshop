@@ -320,10 +320,14 @@
                 }
             }
 
-            function refereeSpeaking() {
+            function refereeSpeaking(waving) {
                 const refereeImg = document.getElementById('referee-img');
-                const originalSrc = '/forbiddenwords/referee.png';
-                const speakingSrc = '/forbiddenwords/referee_openmouth.png';
+                let originalSrc = '/forbiddenwords/referee.png';
+                let speakingSrc = '/forbiddenwords/referee_openmouth.png';
+                if(waving) {
+                    originalSrc = '/forbiddenwords/referee_waves.png';
+                    speakingSrc = '/forbiddenwords/referee_waves_openmouth.png';
+                }
 
                 if (!refereeImg) return null;
 
@@ -656,7 +660,7 @@
             window.speechSynthesis.onvoiceschanged = loadVoices;
         }
 
-        function refereeSpeak(text, callback) {
+        function refereeSpeak(text, waving, callback) {
             console.log(text);
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = currentLanguage === 'fr' ? 'fr-FR' : 'en-US';
@@ -669,7 +673,7 @@
                 utterance.pitch = 0.3;
             }
             
-            const animationInterval = refereeSpeaking();
+            const animationInterval = refereeSpeaking(waving);
 
             utterance.onend = () => {
                 if (animationInterval) {
@@ -716,8 +720,8 @@
             `;
 
             recordStart();
-            refereeSpeak(phrases[language].describeWord(targetWord.word), () => {
-                refereeSpeak(phrases[language].forbiddenWordsAre, () => {
+            refereeSpeak(phrases[language].describeWord(targetWord.word), false, () => {
+                refereeSpeak(phrases[language].forbiddenWordsAre, false, () => {
                     // After saying the main word, show the other forbidden words
                     gameData.forbidden.forEach((word, index) => {
                         setTimeout(() => {
@@ -737,7 +741,7 @@
                                     preludeFinished = true;
                                 };
                             }
-                            refereeSpeak(word, callback);
+                            refereeSpeak(word, false, callback);
                         }, index * 800);
                     });
 
@@ -794,10 +798,10 @@
 
             if (isWin) {
                 // Won
-                refereeSpeak(phrases[currentLanguage].goodJob);
+                refereeSpeak(phrases[currentLanguage].goodJob, true);
             } else {
                 // Lost
-                refereeSpeak(message);
+                refereeSpeak(message, true);
             }
 
             const languageButtons = document.getElementById('language-buttons');
