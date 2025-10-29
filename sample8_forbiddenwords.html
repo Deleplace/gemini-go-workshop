@@ -210,9 +210,10 @@
                             }
                         }
                     }
-                    if (data.serverContent.outputTranscription && data.serverContent.outputTranscription.text) {
-                        modelSpeech += data.serverContent.outputTranscription.text;
-                        console.log('Model says: ', modelSpeech);
+                    const lastModelText = data?.serverContent?.outputTranscription?.text;
+                    if (data.serverContent.outputTranscription && lastModelText) {
+                        console.log('Model says: ', lastModelText);
+                        modelSpeech += lastModelText;
                         if (modelSpeech.toLowerCase().includes(targetWord.word.toLowerCase())) {
                             // Give 1200ms for the contestant to actually pronounce the word, then
                             // proclaim victory.
@@ -220,6 +221,9 @@
                                 endGame(true, phrases[currentLanguage].modelGuessedWord(targetWord.word));
                             }, 1200);
                             return;
+                        } else {
+                            // Missed :(
+                            console.log(`Model missed, "${lastModelText}" is not the word.`);
                         }
                     }
 
