@@ -77,6 +77,23 @@
         #contestant2-img {
             z-index: -1;  /* below the game box */
         }
+        .red-cross {
+            width: 20px;
+            height: 4px;
+            background-color: red;
+            position: relative;
+            transform: rotate(45deg);
+            margin: 10px;
+        }
+
+        .red-cross::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 4px;
+            background-color: red;
+            transform: rotate(90deg);
+        }
     </style>
 
 
@@ -371,7 +388,12 @@
 </head>
 <body class="bg-slate-900 text-white flex items-center justify-center min-h-screen p-4">
     <img id="referee-img" src="/forbiddenwords/referee.png" class="hidden absolute left-8 top-1/2 -translate-y-1/2 h-96">
-    <img id="contestant2-img" src="/forbiddenwords/contestant2.png" class="hidden absolute right-8 top-1/2 -translate-y-1/2 h-96">
+    <div id="contestant-container" class="hidden absolute right-8 top-1/2 -translate-y-1/2 h-96">
+        <img id="contestant2-img" src="/forbiddenwords/contestant2.png" class="h-full">
+        <div id="misses-container" class="absolute top-1/2 right-full flex flex-col space-y-2">
+            <!-- Red crosses will be added here -->
+        </div>
+    </div>
     <div class="w-full max-w-2xl mx-auto text-center">
         
         <header class="mb-8">
@@ -713,6 +735,7 @@
             forbiddenWordsList.innerHTML = '';
             gameScreen.classList.remove('hidden');
             refereeImg.classList.remove('hidden');
+            document.getElementById('contestant-container').classList.remove('hidden');
 
             const gameData = { ...wordData[language][Math.floor(Math.random() * wordData[language].length)] };
             targetWord = { word: gameData.word };

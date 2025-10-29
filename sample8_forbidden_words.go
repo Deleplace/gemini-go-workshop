@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -67,6 +68,7 @@ func serveGame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
 var sample8Upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
@@ -94,6 +96,9 @@ func liveGame(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 
+	gameID := randomString(4)
+	log.Printf("Starting game %s in %s", gameID, lang)
+
 	ctx := context.Background()
 	client, err := genai.NewClient(ctx, nil)
 	if err != nil {
@@ -108,6 +113,7 @@ func liveGame(w http.ResponseWriter, r *http.Request) {
 		model = "gemini-2.5-flash-native-audio-preview-09-2025"
 	}
 
+	// Gemini Live session 1 : model listens to the human and guesses the secret word
 	config := &genai.LiveConnectConfig{}
 	config.SystemInstruction = &genai.Content{
 		Parts: []*genai.Part{
@@ -131,16 +137,39 @@ func liveGame(w http.ResponseWriter, r *http.Request) {
 	}
 	defer session.Close()
 
+	// Gemini Live session 2 : model listens to the human and guesses the secret word
+	configJudge := &genai.LiveConnectConfig{}
+	configJudge.SystemInstruction = &genai.Content{
+		Parts: []*genai.Part{
+			{Text: `
+				You're a judge listening to a human player of Forbidden Words, who is not allowed to
+				say any of the words from the forbidden list. If the human player says any of them,
+				or a very close word with the same radical, or one of the words translated in aother
+				language, then pronounce only the guilty phrase for the human.
+			`},
+		},
+	}
+	config.ResponseModalities = []genai.Modality{genai.ModalityAudio}
+	config.OutputAudioTranscription = &genai.AudioTranscriptionConfig{}
+	sessionJudge, err := client.Live.Connect(ctx, model, config)
+	if err != nil {
+		log.Fatal("connect to model error: ", err)
+	}
+	defer sessionJudge.Close()
+
 	go func() {
+		// Guessing Loop:
+		// Receive audio data from the Gemini Live session.
+		// Forward it to the player browser, via WebSocket.
 		for {
 			message, err := session.Receive()
 			if err != nil {
-				log.Println("deconnected: ", err)
+				log.Println("guesser model deconnected: ", err)
 				return
 			}
 			messageBytes, err := json.Marshal(message)
 			if err != nil {
-				log.Fatal("marhal model response error: ", message, err)
+				log.Fatal("marshal guesser model response error: ", message, err)
 			}
 			err = c.WriteMessage(websocket.TextMessage, messageBytes)
 			if err != nil {
@@ -151,6 +180,10 @@ func liveGame(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	for {
+		// Human speech Loop:
+		// Receive audio  and transcript data from player browser, via WebSocket.
+		// Forward it to the model guesser player's Gemini Live session.
+		// Also forward it to the model judge's Gemini Live session.
 		_, message, err := c.ReadMessage()
 		if err != nil {
 			log.Println("read from client error: ", err)
@@ -162,5 +195,35 @@ func liveGame(w http.ResponseWriter, r *http.Request) {
 			log.Fatal("unmarshal message error ", string(message), err)
 		}
 		session.SendRealtimeInput(realtimeInput)
+		sessionJudge.SendRealtimeInput(realtimeInput)
 	}
+
+	go func() {
+		// Judge Loop:
+		// Receive audio and transcript data from the Gemini Live session.
+		// Signal to the browser to end the game.
+		for {
+			message, err := sessionJudge.Receive()
+			if err != nil {
+				log.Println("judge deconnected: ", err)
+				return
+			}
+			messageBytes, err := json.Marshal(message)
+			if err != nil {
+				log.Fatal("marshal model response error: ", message, err)
+			}
+			log.Printf("Game %s Judge says %q", gameID, string(messageBytes))
+			// TODO err = c.WriteMessage(websocket.TextMessage, messageBytes)
+		}
+	}()
+}
+
+const alphanum = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+func randomString(n int) string {
+	a := make([]byte, n)
+	for i := range a {
+		a[i] = alphanum[rand.Intn(len(alphanum))]
+	}
+	return string(a)
 }
