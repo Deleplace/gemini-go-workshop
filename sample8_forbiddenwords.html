@@ -213,11 +213,11 @@
                         modelSpeech += data.serverContent.outputTranscription.text;
                         console.log('Model says: ', modelSpeech);
                         if (modelSpeech.toLowerCase().includes(targetWord.word.toLowerCase())) {
-                            // Give 800ms for the contestant to actually pronounce the word, then
+                            // Give 1200ms for the contestant to actually pronounce the word, then
                             // proclaim victory.
                             setTimeout(() => {
                                 endGame(true, phrases[currentLanguage].modelGuessedWord(targetWord.word));
-                            }, 800);
+                            }, 1200);
                             return;
                         }
                     }
