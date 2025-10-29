@@ -439,7 +439,7 @@
 
                 <!-- Forbidden Words List -->
                 <div>
-                    <h3 class="text-xl font-semibold mb-3 text-slate-300">Don't say these words:</h3>
+                    <h3 id="dont-say-these-words" class="text-xl font-semibold mb-3 text-slate-300"></h3>
                     <div id="forbidden-words-list" class="flex flex-wrap justify-center gap-2">
                         <!-- Populated by JS -->
                     </div>
@@ -473,7 +473,8 @@
                 youSaidForbidden: (word) => `You said the forbidden word: "${word}"`,
                 modelGuessedWord: (word) => `The model guessed the word: "${word}"`,
                 goodJob: "Good job!",
-                microphoneUsage: "This game uses your microphone."
+                microphoneUsage: "This game uses your microphone.",
+                dontSayTheseWords: "Don't say these words:"
             },
             fr: {
                 gameTitle: "Mots Interdits",
@@ -491,7 +492,8 @@
                 youSaidForbidden: (word) => `Vous avez dit le mot interdit: "${word}"`,
                 modelGuessedWord: (word) => `Le modèle a deviné le mot: "${word}"`,
                 goodJob: "Bravo !",
-                microphoneUsage: "Ce jeu utilise votre microphone."
+                microphoneUsage: "Ce jeu utilise votre microphone.",
+                dontSayTheseWords: "Ne dites pas ces mots :"
             },
             es: {
                 readyToPlay: "¿Listo para jugar?",
@@ -535,6 +537,7 @@
             gameMessage.textContent = phrases[language].readyToPlay;
             messageSubtitle.textContent = phrases[language].clickToStart;
             document.getElementById('microphone-usage').textContent = phrases[language].microphoneUsage;
+            document.getElementById('dont-say-these-words').textContent = phrases[language].dontSayTheseWords;
         }
 
         // Set initial text based on default language
