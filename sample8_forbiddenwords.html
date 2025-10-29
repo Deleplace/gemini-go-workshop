@@ -204,7 +204,10 @@
                     return false;
                 }
                 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                ws = new WebSocket(protocol + '//' + window.location.host + '/live/' + lang);
+                const secretWord = encodeURIComponent(targetWord.word);
+                let u = `${protocol}//${window.location.host}/live/${lang}?forbidden=`;
+                u += allForbiddenWords.join("&forbidden=");
+                ws = new WebSocket(u);
                 ws.onopen = function (evt) {
                     console.debug('OPEN');
                 }
