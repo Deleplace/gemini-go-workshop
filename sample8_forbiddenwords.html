@@ -415,6 +415,9 @@
                     <button id="start-fr-button" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
                         Français
                     </button>
+                    <button id="start-el-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition-transform transform hover:scale-105">
+                        Ελληνικά
+                    </button>
                 </div>
             </div>
             
@@ -492,6 +495,25 @@
                 goodJob: "Bravo !",
                 microphoneUsage: "Ce jeu utilise votre microphone.",
                 dontSayTheseWords: "Ne dites pas ces mots :"
+            },
+            el: {
+                gameTitle: "Παιχνίδι Απαγορευμένων Λέξεων",
+                title: "Απαγορευμένη Λέξη",
+                subtitle: "Περιγράψτε την κύρια λέξη χωρίς να πείτε καμία από τις απαγορευμένες λέξεις!",
+                readyToPlay: "Έτοιμοι για παιχνίδι;",
+                clickToStart: "Κάντε κλικ σε ένα κουμπί για να ξεκινήσει το παιχνίδι.",
+                describeWord: (word) => `Περιγράψτε τη λέξη: ${word}`,
+                forbiddenWordsAre: "Οι απαγορευμένες λέξεις είναι",
+                youSurvived: "Επιβιώσατε! Μπράβο!",
+                youWin: "Κερδίσατε! 🎉",
+                gameOver: "Τέλος παιχνιδιού! 😥",
+                playAgain: "Παίξτε ξανά",
+                micRequired: "Απαιτείται πρόσβαση στο μικρόφωνο για να παίξετε. Παρακαλώ επιτρέψτε την και προσπαθήστε ξανά.",
+                youSaidForbidden: (word) => `Είπατε την απαγορευμένη λέξη: "${word}"`,
+                modelGuessedWord: (word) => `Το μοντέλο μάντεψε τη λέξη: "${word}"`,
+                goodJob: "Καλή δουλειά!",
+                microphoneUsage: "Αυτό το παιχνίδι χρησιμοποιεί το μικρόφωνό σας.",
+                dontSayTheseWords: "Μην πείτε αυτές τις λέξεις:"
             },
             es: {
                 readyToPlay: "¿Listo para jugar?",
@@ -646,6 +668,13 @@
                 { word: 'Miroir', forbidden: ['Refléter', 'Regarder', 'Verre', 'Image'] },
                 { word: 'Nid', forbidden: ['Oiseau', 'Œufs', 'Maison', 'Arbre'] },
                 { word: 'Orange', forbidden: ['Fruit', 'Couleur', 'Agrume', 'Rond'] }
+            ],
+            el: [
+                { word: 'Πίτσα', forbidden: ['Τυρί', 'Ζύμη', 'Πεπερόνι', 'Ιταλική'] },
+                { word: 'Ελέφαντας', forbidden: ['Προβοσκίδα', 'Μεγάλος', 'Χαυλιόδοντας', 'Ζώο'] },
+                { word: 'Κιθάρα', forbidden: ['Χορδές', 'Μουσική', 'Όργανο', 'Παίζω'] },
+                { word: 'Παραλία', forbidden: ['Άμμος', 'Ωκεανός', 'Ήλιος', 'Νερό'] },
+                { word: 'Υπολογιστής', forbidden: ['Ποντίκι', 'Πληκτρολόγιο', 'Οθόνη', 'Κώδικας'] },
             ]
         };
 
@@ -868,6 +897,7 @@
 
         document.getElementById('start-en-button').addEventListener('click', () => handleStartGameClick('en'));
         document.getElementById('start-fr-button').addEventListener('click', () => handleStartGameClick('fr'));
+        document.getElementById('start-el-button').addEventListener('click', () => handleStartGameClick('el'));
 
     </script>
 </body>

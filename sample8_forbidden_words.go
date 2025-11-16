@@ -35,6 +35,13 @@ const sample8Prompt_fr = `
 	Ne dites rien d'autre que le mot que vous devinez.
 `
 
+const sample8Prompt_el = `
+	Παίζετε το παιχνίδι "μάντεψε τη λέξη" όπου ο ανθρώπινος παίκτης με το μικρόφωνό του
+	περιγράφει μια λέξη. Η δουλειά σας είναι να ακούτε την περιγραφή και να λέτε μόνο μία λέξη ως
+	μαντεψιά σας, κάθε λίγα δευτερόλεπτα. Έχετε μόνο 3 μαντεψιές.
+	Μην πείτε τίποτα άλλο εκτός από τη λέξη που μαντεύετε.
+`
+
 func sample8_forbidden_words(ctx context.Context) error {
 	log.SetFlags(0)
 	http.HandleFunc("/", serveGame)
@@ -83,6 +90,8 @@ func liveGame(w http.ResponseWriter, r *http.Request) {
 		prompt = sample8Prompt
 	case "fr":
 		prompt = sample8Prompt_fr
+	case "el":
+		prompt = sample8Prompt_el
 	default:
 		log.Printf("unsupported language: %q", lang)
 		http.NotFound(w, r)
