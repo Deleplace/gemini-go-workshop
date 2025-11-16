@@ -204,10 +204,8 @@
                     return false;
                 }
                 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const secretWord = encodeURIComponent(targetWord.word);
-                let u = `${protocol}//${window.location.host}/live/${lang}?forbidden=`;
-                u += allForbiddenWords.join("&forbidden=");
-                ws = new WebSocket(u);
+                const forbiddenParams = allForbiddenWords.map(word => `forbidden=${encodeURIComponent(word)}`).join('&');
+                ws = new WebSocket(`${protocol}//${window.location.host}/live/${lang}?${forbiddenParams}`);
                 ws.onopen = function (evt) {
                     console.debug('OPEN');
                 }
@@ -220,7 +218,7 @@
                     if (!data.serverContent) return;
 
                     if (data.serverContent.inputTranscription && data.serverContent.inputTranscription.text) {
-                        humanSpeech += data.serverContent.inputTranscription.text;
+                        humanSpeech += data.serverContent.inputTranscription.text + " ";
                         console.log('Human says: ', humanSpeech);
 
                         for (const forbiddenWord of allForbiddenWords) {
