@@ -132,6 +132,16 @@ func liveGame(w http.ResponseWriter, r *http.Request) {
 	config.ResponseModalities = []genai.Modality{genai.ModalityAudio}
 	config.InputAudioTranscription = &genai.AudioTranscriptionConfig{}
 	config.OutputAudioTranscription = &genai.AudioTranscriptionConfig{}
+	var shortDuration int32 = 100
+	config.RealtimeInputConfig = &genai.RealtimeInputConfig{
+		AutomaticActivityDetection: &genai.AutomaticActivityDetection{
+
+			StartOfSpeechSensitivity: "START_SENSITIVITY_HIGH",
+			EndOfSpeechSensitivity:   "END_SENSITIVITY_HIGH",
+			PrefixPaddingMs:          &shortDuration,
+			SilenceDurationMs:        &shortDuration,
+		},
+	}
 	session, err := client.Live.Connect(ctx, model, config)
 	if err != nil {
 		log.Fatal("connect to model error: ", err)
