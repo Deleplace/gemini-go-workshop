@@ -84,12 +84,13 @@ func sample8_forbidden_words_cli(ctx context.Context) error {
 		words = allWords.Fr
 		currentPhrases = phrases["fr"]
 		instructions = `
-			Vous êtes le devineur dans une partie de "Mots Interdits".
-			Je vais vous décrire un mot. Vous devez deviner ce que c'est.
-			Vous n'avez que 3 essais.
-			Le mot à deviner est pour moi, vous ne devez pas le voir. Je vous donnerai la liste des mots interdits.
-			Vous ne devez utiliser aucun des mots interdits dans votre réponse.
-			Si j'utilise un mot interdit, vous devez me le dire et je perds.
+			Tu es le devineur dans une partie de "Mots Interdits".
+			Je vais te décrire un mot. Tu dois deviner ce que c'est.
+			Tu n'as que 3 essais.
+			Je connais le mot à faire deviner, mais je ne peux pas te le dire.
+			Je ne peux pas non plus te dire plusieurs mots interdits.
+			Réponds uniquement en Français.
+			Réponds uniquement le mot que tu supposes être celui que j'essaie de faire deviner.
 			Commençons.
 			`
 	default:
@@ -100,9 +101,10 @@ func sample8_forbidden_words_cli(ctx context.Context) error {
 			You are the guesser in a game of "Forbidden Words".
 			I will describe a word to you. You have to guess what it is.
 			You only have 3 guesses.
-			The word to guess is for me, not for you to see. I will give you the list of forbidden words.
-			You must not use any of the forbidden words in your guess.
-			If I use a forbidden word, you must tell me and I lose.
+			I know the word to guess, but I cannot say it to you.
+			I also cannot say several other forbidden words.
+			Answer only in English.
+			Answer only with the word you think is the one I'm trying to let you guess.
 			Let's start.
 			`
 	}
@@ -112,6 +114,7 @@ func sample8_forbidden_words_cli(ctx context.Context) error {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	gameWord := words[r.Intn(len(words))]
 
+	fmt.Println()
 	fmt.Printf(currentPhrases.wordToDescribe, gameWord.Word)
 	fmt.Printf(currentPhrases.forbiddenWordsAre, strings.Join(gameWord.Forbidden, ", "))
 
