@@ -28,41 +28,45 @@ type wordsByLang struct {
 }
 
 type uiPhrases struct {
-	chooseLanguage    string
-	wordToDescribe    string
-	forbiddenWordsAre string
-	describeTheWord   string
-	usedForbiddenWord string
-	aiGuess           string
-	aiGuessedTheWord  string
-	wordWas           string
+	chooseLanguage          string
+	wordToDescribe          string
+	forbiddenWordsAre       string
+	describeTheWord         string
+	usedForbiddenWord       string
+	usedForbiddenInflection string
+	aiGuess                 string
+	aiGuessedTheWord        string
+	wordWas                 string
 }
 
 var phrases = map[string]uiPhrases{
 	"en": {
-		chooseLanguage:    "Choose your language (en/fr): ",
-		wordToDescribe:    "The word to describe is: %s\n",
-		forbiddenWordsAre: "The forbidden words are: %s\n",
-		describeTheWord:   "\nDescribe the word.\n> ",
-		usedForbiddenWord: "Oh! You used the forbidden word '%s'. You lose!\n",
-		aiGuess:           "AI: %s\n",
-		aiGuessedTheWord:  "\nThe AI guessed the word! You win!\n",
-		wordWas:           "\nThe word was %s. You lose!\n",
+		chooseLanguage:          "Choose your language (en/fr): ",
+		wordToDescribe:          "The word to describe is: %s\n",
+		forbiddenWordsAre:       "The forbidden words are: %s\n",
+		describeTheWord:         "\nDescribe the word.\n> ",
+		usedForbiddenWord:       "Oh! You used the forbidden word '%s'. You lose!\n",
+		usedForbiddenInflection: "Oh! You sais '%s' which is too close to the forbidden word '%s'. You lose!\n",
+		aiGuess:                 "AI: %s\n",
+		aiGuessedTheWord:        "\nThe AI guessed the word! You win!\n",
+		wordWas:                 "\nThe word was %s. You lose!\n",
 	},
 	"fr": {
-		chooseLanguage:    "Choisissez votre langue (en/fr): ",
-		wordToDescribe:    "Le mot à décrire est : %s\n",
-		forbiddenWordsAre: "Les mots interdits sont : %s\n",
-		describeTheWord:   "\nDécrivez le mot.\n> ",
-		usedForbiddenWord: "Oh ! Vous avez utilisé le mot interdit '%s'. Vous avez perdu !\n",
-		aiGuess:           "IA : %s\n",
-		aiGuessedTheWord:  "\nL'IA a deviné le mot ! Vous avez gagné !\n",
-		wordWas:           "\nLe mot était %s. Vous avez perdu !\n",
+		chooseLanguage:          "Choisissez votre langue (en/fr): ",
+		wordToDescribe:          "Le mot à décrire est : %s\n",
+		forbiddenWordsAre:       "Les mots interdits sont : %s\n",
+		describeTheWord:         "\nDécrivez le mot.\n> ",
+		usedForbiddenWord:       "Oh! Vous avez utilisé le mot interdit '%s'. Vous avez perdu !\n",
+		usedForbiddenInflection: "Oh! Vous avez dit '%s' qui est trop proche du mot interdit '%s'. Vous avez perdu !\n",
+		aiGuess:                 "IA : %s\n",
+		aiGuessedTheWord:        "\nL'IA a deviné le mot ! Vous avez gagné !\n",
+		wordWas:                 "\nLe mot était %s. Vous avez perdu !\n",
 	},
 }
 
+const sample8ModelName = "gemini-2.5-flash-lite"
+
 func sample8_forbidden_words_cli(ctx context.Context) error {
-	modelName := "gemini-2.5-flash-lite"
 
 	// Load words from JSON file
 	file, err := os.ReadFile("sample8_words.json")
@@ -136,7 +140,7 @@ func sample8_forbidden_words_cli(ctx context.Context) error {
 		},
 	}
 
-	chat, err := client.Chats.Create(ctx, modelName, config, nil)
+	chat, err := client.Chats.Create(ctx, sample8ModelName, config, nil)
 	if err != nil {
 		return err
 	}
@@ -170,8 +174,13 @@ func sample8_forbidden_words_cli(ctx context.Context) error {
 		}
 
 		if lost {
-			fmt.Printf(currentPhrases.usedForbiddenWord, forbiddenMatched)
-			_ = forbiddenSaid
+			if normalize(forbiddenSaid) == normalize(forbiddenMatched) {
+				// Exact match
+				fmt.Printf(currentPhrases.usedForbiddenWord, forbiddenMatched)
+			} else {
+				// Fuzzy match
+				fmt.Printf(currentPhrases.usedForbiddenInflection, forbiddenSaid, forbiddenMatched)
+			}
 			return nil
 		}
 
@@ -196,33 +205,107 @@ func sample8_forbidden_words_cli(ctx context.Context) error {
 }
 
 func (fw *forbiddenWord) isWinning(ctx context.Context, guess string) (bool, error) {
-	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
-	lowGuess, _, err := transform.String(t, strings.ToLower(guess))
-	if err != nil {
-		return false, err
-	}
-	lowGoal, _, err := transform.String(t, strings.ToLower(fw.Word))
-	if err != nil {
-		return false, err
-	}
+	lowGuess := normalize(guess)
+	lowGoal := normalize(fw.Word)
 	return strings.Contains(lowGuess, lowGoal), nil
 }
 
+// normalize returns its argument lowercased and without diacritics
+func normalize(s string) string {
+	// Local transformers, not shared with other goroutines
+	tr := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	normalized, _, err := transform.String(tr, strings.ToLower(s))
+	if err != nil {
+		// We do not expect string transformation to fail in general
+		panic(err)
+	}
+	return normalized
+}
+
 func (fw *forbiddenWord) saidForbidden(ctx context.Context, said string) (lost bool, forbiddenSaid string, forbiddenMatched string, err error) {
-	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
-	lowSaid, _, err := transform.String(t, strings.ToLower(said))
+	systemInstruction := `
+		You are the judge in the Forbidden Words game.
+		The human player will say a description.
+
+		If the prompt contains any of the forbidden words, or an inflection of a forbidden
+		word, or a forbidden word translated in another language, then the game is lost.
+
+		In the field "forbiddenWord", provide exactly one of the original forbidden words.
+
+		In the field "fragment", provide the part of the prompt that violated the rule.
+
+		The description must be rejected as using a forbidden word only if it actually contains
+		an inflection, or misspelling, or translation of a forbidden word. Synonyms of forbidden
+		words must not trigger a lost game.
+
+		E.g. "ficelle" does not match the forbidden word "Corde", because the two words have
+		a similar meaning but the word "ficelle" is not an inflection of the word "corde" and
+		the game is not lost.
+
+		E.g. "orange" does not match the forbidden word "Agrume", because the two words have
+		a similar meaning but the word "orange" is not an inflection of the word "Agrume" and
+		the game is not lost.
+
+		E.g. "tronc" does not match the forbidden word "Arbre", because the two words have
+		related meaning but the word "tronc" is not an inflection of the word "Arbre" and
+		the game is not lost.
+
+		E.g. "poussent" matches the fodbidden word "Pousser", because "poussent" is a
+		conjugation of the verb "Pousser", thus it is an inflection of "Pousser" and the game
+		is lost.
+
+		The forbidden words are:
+	` + fw.Word + ", " + strings.Join(fw.Forbidden, ", ")
+
+	// Force JSON structured output
+	config := &genai.GenerateContentConfig{
+		SystemInstruction: genai.NewContentFromParts([]*genai.Part{
+			{Text: systemInstruction},
+		}, genai.RoleModel),
+		ResponseMIMEType: "application/json",
+		ResponseJsonSchema: &genai.Schema{
+			Type: genai.TypeObject,
+			Properties: map[string]*genai.Schema{
+				"lost": {
+					Type:        genai.TypeBoolean,
+					Description: "Indicates if the user has lost the game.",
+				},
+				"forbiddenWord": {
+					Type:        genai.TypeString,
+					Description: "The word that triggered the loss condition.",
+				},
+				"fragment": {
+					Type:        genai.TypeString,
+					Description: "The text fragment analyzed.",
+				},
+			},
+			Required: []string{"lost"},
+		},
+	}
+
+	prompt := []*genai.Content{
+		genai.NewContentFromParts([]*genai.Part{
+			{Text: said},
+		}, genai.RoleUser),
+	}
+
+	resp, err := client.Models.GenerateContent(ctx, sample8ModelName, prompt, config)
+
 	if err != nil {
 		return false, "", "", err
 	}
 
-	for _, forbidden := range fw.Forbidden {
-		lowForbidden, _, err := transform.String(t, strings.ToLower(forbidden))
-		if err != nil {
-			return false, "", "", err
-		}
-		if strings.Contains(lowSaid, lowForbidden) {
-			return true, forbidden, forbidden, nil
-		}
+	structureAnswer := resp.Candidates[0].Content.Parts[0].Text
+
+	// Parse structureAnswer to return the fields
+	var result struct {
+		Lost          bool   `json:"lost"`
+		ForbiddenWord string `json:"forbiddenWord"`
+		Fragment      string `json:"fragment"`
 	}
-	return false, "", "", nil
+	if err := json.Unmarshal([]byte(structureAnswer), &result); err != nil {
+		return false, "", "", fmt.Errorf("failed to parse AI response: %w", err)
+	}
+
+	return result.Lost, result.Fragment, result.ForbiddenWord, nil
 }
