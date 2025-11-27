@@ -11,6 +11,7 @@ import (
 )
 
 var N = flag.Int("n", -1, "index of the sample to run")
+var cliMode = flag.Bool("cli", false, "if true, runs the CLI version of sample 8")
 
 var client *genai.Client
 
@@ -69,7 +70,14 @@ var samples = []namedSample{
 	5: {name: "Generate images", f: sample5_generateImage},
 	6: {name: "Upscale image", f: sample6_upscaleImage},
 	7: {name: "Live streaming server", f: sample7_liveStreamingServer},
-	8: {name: "Forbidden Words game", f: sample8_forbidden_words},
+	8: {name: "Forbidden Words game", f: sample8_wrapper},
+}
+
+func sample8_wrapper(ctx context.Context) error {
+	if *cliMode {
+		return sample8_forbidden_words_cli(ctx)
+	}
+	return sample8_forbidden_words(ctx)
 }
 
 func usage() {
