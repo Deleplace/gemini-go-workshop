@@ -73,41 +73,47 @@ func sample8_forbidden_words_cli(ctx context.Context) error {
 	}
 
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print(phrases["en"].chooseLanguage)
-	lang, _ := reader.ReadString('\n')
-	lang = strings.TrimSpace(lang)
 
 	var words []forbiddenWord
 	var instructions string
 	var currentPhrases uiPhrases
-	switch lang {
-	case "fr":
-		words = allWords.Fr
-		currentPhrases = phrases["fr"]
-		instructions = `
-			Tu es le devineur dans une partie de "Mots Interdits".
-			Je vais te décrire un mot. Tu dois deviner ce que c'est.
-			Tu n'as que 3 essais.
-			Je connais le mot à faire deviner, mais je ne peux pas te le dire.
-			Je ne peux pas non plus te dire plusieurs mots interdits.
-			Réponds uniquement en Français.
-			Réponds uniquement le mot que tu supposes être celui que j'essaie de faire deviner.
-			Commençons.
-			`
-	default:
-		lang = "en"
-		words = allWords.En
-		currentPhrases = phrases["en"]
-		instructions = `
-			You are the guesser in a game of "Forbidden Words".
-			I will describe a word to you. You have to guess what it is.
-			You only have 3 guesses.
-			I know the word to guess, but I cannot say it to you.
-			I also cannot say several other forbidden words.
-			Answer only in English.
-			Answer only with the word you think is the one I'm trying to let you guess.
-			Let's start.
-			`
+
+	var langChosen = false
+	for !langChosen {
+		fmt.Print(phrases["en"].chooseLanguage)
+		lang, _ := reader.ReadString('\n')
+		lang = strings.TrimSpace(lang)
+
+		switch lang {
+		case "fr":
+			langChosen = true
+			words = allWords.Fr
+			currentPhrases = phrases["fr"]
+			instructions = `
+				Tu es le devineur dans une partie de "Mots Interdits".
+				Je vais te décrire un mot. Tu dois deviner ce que c'est.
+				Tu n'as que 3 essais.
+				Je connais le mot à faire deviner, mais je ne peux pas te le dire.
+				Je ne peux pas non plus te dire plusieurs mots interdits.
+				Réponds uniquement en Français.
+				Réponds uniquement le mot que tu supposes être celui que j'essaie de faire deviner.
+				Commençons.
+				`
+		case "en":
+			langChosen = true
+			words = allWords.En
+			currentPhrases = phrases["en"]
+			instructions = `
+				You are the guesser in a game of "Forbidden Words".
+				I will describe a word to you. You have to guess what it is.
+				You only have 3 guesses.
+				I know the word to guess, but I cannot say it to you.
+				I also cannot say several other forbidden words.
+				Answer only in English.
+				Answer only with the word you think is the one I'm trying to let you guess.
+				Let's start.
+				`
+		}
 	}
 	//fmt.Println(instructions)
 
