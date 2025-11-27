@@ -39,6 +39,9 @@ func sample8_forbidden_words(ctx context.Context) error {
 	log.SetFlags(0)
 	http.HandleFunc("/", serveGame)
 	http.HandleFunc("/live/", liveGame)
+	http.HandleFunc("/sample8_words.json", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "sample8_words.json")
+	})
 	http.Handle("/forbiddenwords/", http.StripPrefix("/forbiddenwords/", http.FileServer(http.Dir("testdata/forbiddenwords"))))
 
 	// Determine port for HTTP service.
