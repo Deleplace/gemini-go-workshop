@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/genai"
 )
 
@@ -137,24 +138,44 @@ func sample8_forbidden_words_cli(ctx context.Context) error {
 		description, _ := reader.ReadString('\n')
 		description = strings.TrimSpace(description)
 
-		// Check for forbidden words (client-side)
-		for _, forbidden := range gameWord.Forbidden {
-			if strings.Contains(strings.ToLower(description), strings.ToLower(forbidden)) {
-				fmt.Printf(currentPhrases.usedForbiddenWord, forbidden)
-				return nil
-			}
-		}
+		g := new(errgroup.Group)
 
-		result, err := chat.SendMessage(ctx, genai.Part{Text: description})
+		// Check for forbidden words
+		var lost bool
+		var forbiddenSaid, forbiddenMatched string
+		g.Go(func() error {
+			lost, forbiddenSaid, forbiddenMatched, err = gameWord.saidForbidden(ctx, description)
+			return err
+		})
+
+		// Let Gemini guess, concurrently
+		var result *genai.GenerateContentResponse
+		g.Go(func() error {
+			result, err = chat.SendMessage(ctx, genai.Part{Text: description})
+			return err
+		})
+
+		err := g.Wait()
 		if err != nil {
-			return fmt.Errorf("error generating content: %w", err)
+			return err
 		}
 
-		// AI's turn
+		if lost {
+			fmt.Printf(currentPhrases.usedForbiddenWord, forbiddenMatched)
+			_ = forbiddenSaid
+			return nil
+		}
+
+		// AI's guess
 		aiResponse := textOf(result)
 		fmt.Printf(currentPhrases.aiGuess, aiResponse)
 
-		if strings.Contains(strings.ToLower(string(aiResponse)), strings.ToLower(gameWord.Word)) {
+		winning, err := gameWord.isWinning(ctx, aiResponse)
+		if err != nil {
+			return err
+		}
+
+		if winning {
 			fmt.Println(currentPhrases.aiGuessedTheWord)
 			return nil
 		}
@@ -163,4 +184,19 @@ func sample8_forbidden_words_cli(ctx context.Context) error {
 
 	fmt.Printf(currentPhrases.wordWas, gameWord.Word)
 	return nil
+}
+
+func (fw *forbiddenWord) isWinning(ctx context.Context, guess string) (bool, error) {
+	return strings.Contains(
+		strings.ToLower(string(guess)),
+		strings.ToLower(fw.Word)), nil
+}
+
+func (fw *forbiddenWord) saidForbidden(ctx context.Context, said string) (lost bool, forbiddenSaid string, forbiddenMatched string, err error) {
+	for _, forbidden := range fw.Forbidden {
+		if strings.Contains(strings.ToLower(said), strings.ToLower(forbidden)) {
+			return true, forbidden, forbidden, nil
+		}
+	}
+	return false, "", "", nil
 }
