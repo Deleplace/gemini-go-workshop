@@ -9,8 +9,12 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode"
 
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 	"google.golang.org/genai"
 )
 
@@ -18,7 +22,6 @@ type forbiddenWord struct {
 	Word      string   `json:"word"`
 	Forbidden []string `json:"forbidden"`
 }
-
 type wordsByLang struct {
 	En []forbiddenWord `json:"en"`
 	Fr []forbiddenWord `json:"fr"`
@@ -193,14 +196,31 @@ func sample8_forbidden_words_cli(ctx context.Context) error {
 }
 
 func (fw *forbiddenWord) isWinning(ctx context.Context, guess string) (bool, error) {
-	return strings.Contains(
-		strings.ToLower(string(guess)),
-		strings.ToLower(fw.Word)), nil
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	lowGuess, _, err := transform.String(t, strings.ToLower(guess))
+	if err != nil {
+		return false, err
+	}
+	lowGoal, _, err := transform.String(t, strings.ToLower(fw.Word))
+	if err != nil {
+		return false, err
+	}
+	return strings.Contains(lowGuess, lowGoal), nil
 }
 
 func (fw *forbiddenWord) saidForbidden(ctx context.Context, said string) (lost bool, forbiddenSaid string, forbiddenMatched string, err error) {
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	lowSaid, _, err := transform.String(t, strings.ToLower(said))
+	if err != nil {
+		return false, "", "", err
+	}
+
 	for _, forbidden := range fw.Forbidden {
-		if strings.Contains(strings.ToLower(said), strings.ToLower(forbidden)) {
+		lowForbidden, _, err := transform.String(t, strings.ToLower(forbidden))
+		if err != nil {
+			return false, "", "", err
+		}
+		if strings.Contains(lowSaid, lowForbidden) {
 			return true, forbidden, forbidden, nil
 		}
 	}
