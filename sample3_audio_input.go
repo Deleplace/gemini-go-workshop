@@ -29,6 +29,7 @@ func sample3_audioInput(ctx context.Context) error {
 
 	prompt := []*genai.Content{
 		{
+			Role: "user",
 			Parts: []*genai.Part{
 				genai.NewPartFromBytes(audiodata, "audio/mp3"),
 			},

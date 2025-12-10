@@ -32,6 +32,7 @@ func sample4_videoInput(ctx context.Context) error {
 
 	multimodalPrompt := []*genai.Content{
 		{
+			Role: "user",
 			Parts: []*genai.Part{
 				genai.NewPartFromBytes(videodata, "video/mp4"),
 				genai.NewPartFromText(question1),

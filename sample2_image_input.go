@@ -35,6 +35,7 @@ func sample2_imageInput(ctx context.Context) error {
 
 	multimodalPrompt1 := []*genai.Content{
 		{
+			Role: "user",
 			Parts: []*genai.Part{
 				genai.NewPartFromBytes(imgdata, "image/png"),
 				genai.NewPartFromText(question1),
@@ -55,6 +56,7 @@ func sample2_imageInput(ctx context.Context) error {
 
 	multimodalPrompt2 := []*genai.Content{
 		{
+			Role: "user",
 			Parts: []*genai.Part{
 				genai.NewPartFromBytes(imgdata, "image/png"),
 				genai.NewPartFromText(question2),
