@@ -1,5 +1,5 @@
 # gemini-go-workshop
-Workshop to discover Gemini 2.0 using the Go SDK
+Workshop to discover Gemini 3.5 using the Go SDK
 
 ## Google AI API key
 
@@ -57,7 +57,7 @@ go run . -n=1
 go run . -n=2
 ```
 
-Exercise: Is the last answer good enough? What happens if you use the model "gemini-2.5-pro" instead?
+Exercise: Is the last answer good enough? What happens if you use the model "gemini-3.1-pro-preview" instead?
 
 ### Sample 3: Multimodal audio input
 ```

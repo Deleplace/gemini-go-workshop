@@ -83,12 +83,9 @@ func live(w http.ResponseWriter, r *http.Request) {
 		// Use the latest Vertex AI Live API model with Native Audio Preview (as of Oct 2025)
 		model = "gemini-live-2.5-flash-preview-native-audio-09-2025"
 	} else {
-		// Use the latest Gemini API (Google AI Studio) model with Native Audio Preview (as of Oct 2025)
-		// This replaces the soon-to-be-discontinued 'gemini-live-2.5-flash-preview'.
-		model = "gemini-2.5-flash-native-audio-preview-09-2025"
+		// Use the latest Gemini API (Google AI Studio) model with Native Audio Preview
+		model = "gemini-3.1-flash-live-preview"
 	}
-	// TODO: Consider updating to the Generally Available (GA) version of the
-	// Live API Native Audio models when they are released (expected Nov 2025).
 
 	// Establish the live WebSocket connection with the specified GenAI model.
 	config := &genai.LiveConnectConfig{} // empty config
@@ -99,8 +96,8 @@ func live(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 	// voiceName := "Zephyr"
-	// voiceName := "Gacrux" // not available for model models/gemini-live-2.5-flash-preview
-	// voiceName := "Achird" // not available for model models/gemini-live-2.5-flash-preview
+	// voiceName := "Gacrux" // not available for model models/gemini-3.1-flash-live-preview
+	// voiceName := "Achird" // not available for model models/gemini-3.1-flash-live-preview
 	// voiceName := "Kore" // asian
 	// config.SpeechConfig = &genai.SpeechConfig{
 	// 	VoiceConfig: &genai.VoiceConfig{

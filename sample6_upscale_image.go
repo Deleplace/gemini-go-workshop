@@ -18,7 +18,7 @@ import (
 // $ go run . -n=6
 
 func sample6_upscaleImage(ctx context.Context) error {
-	modelName := "imagen-3.0-generate-002"
+	modelName := "imagen-4.0-upscale-preview"
 
 	imgdata, err := os.ReadFile("./testdata/lion.jpg")
 	if err != nil {

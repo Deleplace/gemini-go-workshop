@@ -18,7 +18,7 @@ import (
 // $ go run . -n=5
 
 func sample5_generateImage(ctx context.Context) error {
-	modelName := "imagen-3.0-generate-002"
+	modelName := "imagen-4.0-generate-001"
 	prompt := "Create an overly decorated umbrella."
 	fmt.Println("Prompt:", prompt)
 	fmt.Println()

@@ -64,7 +64,7 @@ var phrases = map[string]uiPhrases{
 	},
 }
 
-const sample8ModelName = "gemini-2.5-flash-lite"
+const sample8ModelName = "gemini-3.5-flash"
 
 func sample8_forbidden_words_cli(ctx context.Context) error {
 

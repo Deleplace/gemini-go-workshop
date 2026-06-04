@@ -13,7 +13,7 @@ import (
 // $ go run . -n=0
 
 func sample0_text(ctx context.Context) error {
-	modelName := "gemini-2.5-flash-lite"
+	modelName := "gemini-3.5-flash"
 	question := "When was the battle of Austerlitz?"
 	fmt.Println("Question:", question)
 
